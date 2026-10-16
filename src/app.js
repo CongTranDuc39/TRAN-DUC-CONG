@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const validation = require('./validation');
 const createRepository = require('./repository');
+const { createMetrics } = require('./metrics');
 
 const entities = {
   classes: { label: 'lớp học', validate: validation.validateClass, fields: ['code', 'name', 'school_year'], defaults: { school_year: '2026-2027' } },
@@ -18,6 +19,8 @@ const entities = {
 function createApp(pool) {
   const app = express();
   const repo = createRepository(pool);
+  const metrics = createMetrics();
+  app.use(metrics.middleware);
   app.disable('x-powered-by');
   app.set('view engine', 'ejs');
   app.set('views', path.join(__dirname, '..', 'views'));
@@ -27,6 +30,8 @@ function createApp(pool) {
     contentSecurityPolicy: { directives: { 'upgrade-insecure-requests': null, frameAncestors: ["'none'"] } },
     strictTransportSecurity: false
   }));
+  // Docker-internal Prometheus endpoint; the public Nginx location denies access.
+  app.get('/metrics', metrics.handler);
   app.use('/css', express.static(path.join(__dirname, '..', 'public', 'css')));
   app.use('/js', express.static(path.join(__dirname, '..', 'public', 'js')));
 

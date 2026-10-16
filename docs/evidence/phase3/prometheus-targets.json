@@ -1,0 +1,59 @@
+{
+  "collectedAt": "2026-10-16T02:44:47.850Z",
+  "targets": [
+    {
+      "job": "cadvisor",
+      "instance": "cadvisor:8080",
+      "scrapeUrl": "http://cadvisor:8080/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-16T02:44:39.500744195Z",
+      "lastScrapeDuration": 0.020757747,
+      "lastError": ""
+    },
+    {
+      "job": "docker-metadata",
+      "instance": "container-metadata:9256",
+      "scrapeUrl": "http://container-metadata:9256/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-16T02:44:40.380396774Z",
+      "lastScrapeDuration": 0.051532225,
+      "lastError": ""
+    },
+    {
+      "job": "express",
+      "instance": "app:3000",
+      "scrapeUrl": "http://app:3000/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-16T02:44:41.727574509Z",
+      "lastScrapeDuration": 0.005017776,
+      "lastError": ""
+    },
+    {
+      "job": "mysql",
+      "instance": "mysql-exporter:9104",
+      "scrapeUrl": "http://mysql-exporter:9104/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-16T02:44:44.112192292Z",
+      "lastScrapeDuration": 0.012750886,
+      "lastError": ""
+    },
+    {
+      "job": "nginx",
+      "instance": "nginx-exporter:9113",
+      "scrapeUrl": "http://nginx-exporter:9113/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-16T02:44:41.430047404Z",
+      "lastScrapeDuration": 0.001947753,
+      "lastError": ""
+    },
+    {
+      "job": "prometheus",
+      "instance": "prometheus:9090",
+      "scrapeUrl": "http://prometheus:9090/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-16T02:44:34.217442662Z",
+      "lastScrapeDuration": 0.004250045,
+      "lastError": ""
+    }
+  ]
+}

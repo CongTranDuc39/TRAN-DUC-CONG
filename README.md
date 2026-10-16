@@ -1,6 +1,6 @@
-# Hệ thống quản lý sinh viên — Giai đoạn 2
+# Hệ thống quản lý sinh viên — Giai đoạn 3
 
-Ứng dụng Express.js, EJS, MySQL và mysql2 với giao diện tiếng Việt, chạy bằng Docker Compose. Giai đoạn 2 bổ sung Nginx reverse proxy và các header bảo mật. phpMyAdmin hỗ trợ xem dữ liệu và thao tác cơ sở dữ liệu khi demo.
+Ứng dụng Express.js, EJS, MySQL và mysql2 với giao diện tiếng Việt, chạy bằng Docker Compose. Giai đoạn 3 bổ sung Prometheus, Grafana, cAdvisor và các exporter để giám sát hệ thống. Website tiếp tục đi qua Nginx, giữ toàn bộ CRUD và dữ liệu demo.
 
 | Thông tin | Nội dung |
 | --- | --- |
@@ -10,138 +10,144 @@
 | Trường | Đại học Công nghệ Thông tin và Truyền thông |
 | Giảng viên | Lê Khánh Dương |
 
-## Chức năng
+## Chức năng và địa chỉ
 
 - Dashboard đếm sinh viên, lớp, môn học và bản ghi điểm.
-- Thêm, xem, sửa, xóa lớp học, sinh viên, môn học và điểm số.
-- Gán sinh viên vào lớp hoặc để chưa xếp lớp.
-- Gán điểm theo sinh viên, môn học, học kỳ và năm học.
-- Tìm kiếm, lọc dữ liệu và kiểm tra dữ liệu đầu vào.
-- Tính điểm tổng kết môn học và điểm trung bình theo số tín chỉ.
-- Endpoint `/health` kiểm tra kết nối MySQL bằng `SELECT 1`.
+- CRUD lớp, sinh viên, môn học và điểm; gán sinh viên vào lớp, gán điểm theo môn/học kỳ/năm học.
+- Tìm kiếm, lọc, kiểm tra đầu vào; tính điểm môn và trung bình theo tín chỉ.
+- `/health` kiểm tra MySQL bằng `SELECT 1`.
+- Giám sát container, Express, MySQL và Nginx qua Prometheus/Grafana.
 
-Giai đoạn 2 giữ toàn bộ CRUD và dữ liệu của giai đoạn 1; chưa triển khai Prometheus, Grafana, Loki hoặc Promtail.
+| Giao diện | Địa chỉ trên máy cá nhân |
+| --- | --- |
+| Website qua Nginx | <http://localhost:8082> |
+| Health của website và MySQL | <http://localhost:8082/health> |
+| phpMyAdmin | <http://localhost:5056> |
+| Prometheus | <http://localhost:9091> |
+| Prometheus Targets | <http://localhost:9091/targets> |
+| Grafana | <http://localhost:3001> |
+| Dashboard | <http://localhost:3001/d/student-management/student-management-monitoring> |
 
-## Nginx reverse proxy
+Các cổng trên chỉ bind `127.0.0.1`. Express, MySQL, cAdvisor và exporter không publish cổng ra host. Giai đoạn 3 chưa triển khai Loki hoặc Promtail.
+
+## Kiến trúc
 
 ```text
-Trình duyệt http://localhost:8082 → nginx:80 → app:3000 → db:3306
-phpMyAdmin http://localhost:5056 → phpmyadmin:80 → db:3306
+Trình duyệt :8082 → nginx:80 → app:3000 → db:3306
+phpMyAdmin :5056 → phpmyadmin:80 → db:3306
+Grafana :3001 → grafana:3000 → prometheus:9090 ← :9091
+                                   ├─ prometheus:9090
+                                   ├─ app:3000/metrics
+                                   ├─ cadvisor:8080/metrics
+                                   ├─ container-metadata:9256/metrics → Docker socket
+                                   ├─ mysql-exporter:9104/metrics → db:3306
+                                   └─ nginx-exporter:9113/metrics → nginx:8080/stub_status
 ```
 
-Chỉ service `nginx` publish cổng website `127.0.0.1:8082:80`. Service Express tên `app` chỉ expose cổng nội bộ `3000`, không publish cổng ra host. Nginx gọi `app:3000` qua DNS của Docker; cấu hình upstream tự cập nhật địa chỉ khi container `app` được tạo lại. MySQL và volume `mysql_data` giữ nguyên.
+Prometheus scrape mỗi 15 giây, giữ dữ liệu 7 ngày trong `prometheus_data`. Grafana lưu tài khoản/cấu hình trong `grafana_data`. Volume `mysql_data`, schema và seed hiện có được giữ nguyên.
 
-Cấu hình trong `nginx/default.conf`:
+| Thành phần bổ sung | Image |
+| --- | --- |
+| Prometheus | `prom/prometheus:v3.15.0` |
+| Grafana | `grafana/grafana:13.2.3` |
+| cAdvisor | `ghcr.io/google/cadvisor:0.55.1` |
+| MySQL exporter | `prom/mysqld-exporter:v0.20.0` |
+| Nginx exporter | `nginx/nginx-prometheus-exporter:1.4.1` |
 
-| Header trả về | Giá trị |
+cAdvisor cần `privileged` và các mount chỉ đọc của Docker socket, containerd socket, rootfs, `/sys`, `/var/lib/docker` để thu thập CPU/RAM container. Trên Docker Desktop, đây là tài nguyên của máy ảo Linux chạy Docker. Cấu hình dùng containerd namespace `moby` để lấy được số liệu thực tế trong môi trường này. cAdvisor không có giao diện publish ra host.
+
+Docker Desktop/containerd có thể không cung cấp nhãn Compose cho cAdvisor. Service nội bộ `container-metadata` dùng Node.js, cổng `9256`, chỉ gọi Docker API `GET /containers/json` với bộ lọc project `qlsv-trancong`. Metric `qlsv_container_info{container_id,service,name,project}=1` ánh xạ ID thành tên service; dashboard ghép metric này với CPU/RAM thực tế từ cAdvisor để chỉ hiển thị container của dự án. Service này không tạo số liệu CPU/RAM và không đọc thông tin xác thực. Docker socket được mount chỉ đọc, container dùng filesystem chỉ đọc, bỏ toàn bộ capability và bật `no-new-privileges`; không publish cổng ra host.
+
+## Khởi chạy trên Windows
+
+Cần Docker Desktop đang chạy với Linux containers, Docker Compose v2 và các cổng `8082`, `5056`, `9091`, `3001` còn trống. Node.js 24 và npm cần thiết khi chạy kiểm tra trực tiếp trên máy.
+
+Mở Windows PowerShell tại thư mục dự án:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Validate
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Up
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Ps
+```
+
+Các action lần lượt chạy `docker compose config --quiet`, `docker compose up -d --build` và `docker compose ps`. Script dùng project `qlsv-trancong`, truyền rõ `--env-file .local/empty.env` là file rỗng để Compose không tự đọc `.env`. Script không đọc, sửa hoặc in `.env`; biến môi trường tiến trình được khôi phục khi kết thúc.
+
+Lần đầu cần tải image, build Express và đợi healthcheck. `mysql-exporter-init` là service chạy một lần, kết thúc với exit code 0 sau khi chuẩn bị user giám sát; trạng thái `Exited (0)` của service này là bình thường. Các service có healthcheck gồm MySQL, Express, Nginx, Prometheus và Grafana.
+
+### Mật khẩu và đăng nhập
+
+Script giữ nguyên thông tin MySQL hiện có trong `.local/credentials.xml`; không tạo lại mật khẩu DB/root khi nâng giai đoạn. Mật khẩu mới cho exporter và Grafana được tạo ngẫu nhiên từ 32 byte, lưu riêng bằng Windows DPAPI trong `.local/monitoring-credentials.xml`. Hai file này chỉ giải mã được bởi cùng tài khoản Windows trên cùng máy.
+
+`Validate` hoặc `Up` chuẩn bị các file runtime sau, UTF-8 không BOM, nằm trong `.local/` bị loại khỏi Git và Docker build:
+
+| File runtime | Mục đích |
+| --- | --- |
+| `.local/secrets/mysql-root-password.txt` | Chỉ service khởi tạo exporter dùng để quản lý tài khoản |
+| `.local/secrets/mysql-exporter-password.txt` | Mật khẩu user `qlsv_exporter` cho service khởi tạo |
+| `.local/secrets/mysql-exporter.cnf` | Cấu hình đăng nhập Docker secret của MySQL exporter |
+| `.local/secrets/grafana-admin-password.txt` | Docker secret mật khẩu quản trị Grafana |
+
+Prometheus không cần mật khẩu database. Grafana dùng `GF_SECURITY_ADMIN_PASSWORD__FILE` để đọc Docker secret; source và datasource provisioning không chứa mật khẩu. `mysql-exporter-init` tạo/cập nhật user `qlsv_exporter`, giới hạn 3 kết nối và cấp `PROCESS`, `REPLICATION CLIENT`, `SELECT` phục vụ exporter. Việc này hoạt động trên volume MySQL hiện có, không chạy lại seed và không sửa dữ liệu CRUD.
+
+Đăng nhập bằng các lệnh sau. Script chỉ in tên tài khoản, sao chép mật khẩu vào clipboard và mở trình duyệt; dán mật khẩu vào ô đăng nhập rồi xóa clipboard nếu cần.
+
+```powershell
+# phpMyAdmin: qlsv_app
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Login
+# Grafana: admin
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action GrafanaLogin
+```
+
+Giữ cả hai file DPAPI để chạy lại. Nếu volume MySQL hoặc Grafana đã tồn tại nhưng thiếu file DPAPI tương ứng, script dừng để tránh tạo mật khẩu không khớp; khôi phục bí mật bằng đúng tài khoản/máy đã tạo. Sao chép file XML sang máy/tài khoản khác không giải mã được. Với cách triển khai ngoài Windows, cần cung cấp lại mật khẩu DB/root của volume hiện có và bốn file Docker secret đúng các đường dẫn trên bằng công cụ quản lý bí mật; không đặt mật khẩu vào source hoặc commit `.env`. `.env.example` chỉ mô tả biến cấu hình và giá trị mẫu.
+
+## Metrics và dashboard
+
+Datasource `Prometheus` có UID `prometheus`, URL nội bộ `http://prometheus:9090`, được provision tự động và đặt làm mặc định. Dashboard **Student Management Monitoring**, UID `student-management`, nằm trong thư mục **QLSV**, được nạp từ JSON trong repository. Provider kiểm tra file mỗi 30 giây bằng polling để nhận thay đổi ổn định qua mount của Docker Desktop. Dashboard có 17 panel dữ liệu, chia thành hai nhóm:
+
+- **Container & Web**: CPU, RAM container; tổng request, lỗi HTTP, request/giây, phân bố HTTP status; độ trễ p95 và trung bình.
+- **Database & Nginx**: trạng thái MySQL, kết nối hiện tại/giới hạn; trạng thái Nginx, kết nối và request/giây; bảng 6 Prometheus targets.
+
+Express dùng `prom-client`, endpoint nội bộ `app:3000/metrics`:
+
+| Metric | Ý nghĩa |
+| --- | --- |
+| `qlsv_http_requests_total` | Số response hoàn tất, label `method`, `route`, `status_code` |
+| `qlsv_http_request_duration_seconds` | Histogram thời gian phản hồi theo cùng label, đơn vị giây |
+| `qlsv_http_errors_total` | Response có status từ 400, gồm lỗi 4xx/5xx |
+| `qlsv_process_*`, `qlsv_nodejs_*` | Tài nguyên tiến trình Node.js do `prom-client` thu thập |
+
+Label route dùng mẫu như `/students/:id/edit`, không chứa MSSV, query string, nội dung request hoặc đường dẫn tùy ý; request scrape `/metrics` không tự tăng bộ đếm web. Số liệu Express phản ánh request tới ứng dụng; lỗi do chính Nginx trả trước khi proxy được quan sát ở phía Nginx.
+
+Nginx chỉ mở `stub_status` ở cổng Docker nội bộ `8080`. `/metrics` và `/stub_status` không được cung cấp qua website `:8082`. Exporter dùng `http://nginx:8080/stub_status`.
+
+Sau khi khởi chạy, mở vài trang hoặc chạy kiểm thử CRUD rồi đợi ít nhất hai chu kỳ scrape, khoảng 30–60 giây, để biểu đồ `rate()` có dữ liệu. Counter trở về 0 khi tiến trình ứng dụng khởi động lại; Prometheus xử lý việc reset khi tính tốc độ.
+
+Một số truy vấn demo:
+
+```promql
+up
+sum(rate(qlsv_http_requests_total[5m]))
+sum by (status_code) (qlsv_http_requests_total)
+histogram_quantile(0.95, sum by (le) (rate(qlsv_http_request_duration_seconds_bucket[5m])))
+mysql_up
+mysql_global_status_threads_connected
+nginx_up
+```
+
+## Reverse proxy và bảo mật hiện có
+
+Website chỉ được publish qua `nginx:80` tại `127.0.0.1:8082`; Express chỉ expose `3000`. Nginx dùng DNS Docker để tìm `app:3000`, cập nhật địa chỉ khi container được tạo lại. Các header sau áp dụng cả phản hồi lỗi và không bị lặp từ Express:
+
+| Header | Giá trị |
 | --- | --- |
 | `X-Content-Type-Options` | `nosniff` |
 | `X-Frame-Options` | `DENY` |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` |
 
-Các header được thêm với `always`, áp dụng cả phản hồi lỗi. Nginx ẩn bốn header tương ứng từ Express để mỗi header chỉ có một giá trị. CSP của ứng dụng dùng `frame-ancestors 'none'` để thống nhất với `X-Frame-Options: DENY`; các bảo vệ Helmet khác được giữ nguyên. Nginx giới hạn request body ở `32k` và ẩn số phiên bản trong header `Server`.
+Proxy truyền `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`; ghi đè chuỗi XFF do client tự gửi tại proxy biên. Express tắt `trust proxy`. CSP dùng `frame-ancestors 'none'`, body tối đa `32k`, ẩn phiên bản Nginx. Access log JSON ra stdout, error log ra stderr, không ghi query string hay request body. Chưa triển khai HTTPS, đăng nhập/phân quyền ứng dụng hoặc thu thập log tập trung ở giai đoạn này.
 
-Nginx truyền `Host` giữ cả cổng truy cập, `X-Real-IP` bằng địa chỉ kết nối đến Nginx, `X-Forwarded-For` bằng địa chỉ đó và `X-Forwarded-Proto` bằng giao thức của request. Đây là proxy biên duy nhất nên `X-Forwarded-For` do client tự gửi bị ghi đè để tránh giả mạo. Express tiếp tục tắt `trust proxy`; chưa có chức năng cần tin các header này để xác định IP hoặc giao thức.
-
-Access log theo JSON được ghi ra stdout, error log ra stderr, sẵn sàng cho giai đoạn thu thập log sau. Access log dùng đường dẫn không kèm query string để giảm ghi lại dữ liệu tìm kiếm. Chưa cấu hình HTTPS, đăng nhập hoặc phân quyền trong giai đoạn này.
-
-## Yêu cầu
-
-- Docker Desktop đã chạy, bật Linux containers và có Docker Compose v2.
-- Cổng `8082` và `5056` đang trống.
-- Node.js 24 và npm chỉ cần nếu chạy kiểm tra bằng npm trực tiếp trên máy.
-
-MySQL và Express không mở cổng ra máy chủ. Nginx và phpMyAdmin chỉ bind `127.0.0.1`, dành cho demo trên máy cá nhân.
-
-## Cấu hình mật khẩu
-
-### Cách thuận tiện trên Windows, không dùng file `.env`
-
-Script `scripts/local-stack.ps1` tự tạo hai mật khẩu ngẫu nhiên, lưu dưới dạng `PSCredential` trong `.local/credentials.xml` bằng DPAPI của Windows. File chỉ giải mã được bởi **cùng tài khoản Windows trên cùng máy**; `.local/` bị loại khỏi Git và Docker build. Script truyền một file rỗng riêng `.local/empty.env` cho Compose, không đọc, sửa hoặc in file `.env`. Biến môi trường chỉ được đặt trong tiến trình đang chạy và được khôi phục khi script kết thúc.
-
-Chạy Docker Desktop rồi mở Windows PowerShell tại thư mục dự án:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Validate
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Up
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Ps
-```
-
-`Up` tương ứng `docker compose up -d --build`; `Validate` tương ứng `docker compose config --quiet`. Mặc định khi không truyền `-Action` là `Up`. Cả hai cách chạy thủ công và script dùng project `qlsv-trancong`, cơ sở dữ liệu `qlsv`, tài khoản `qlsv_app`.
-
-Để đăng nhập phpMyAdmin, tự chạy lệnh sau. Script mở trình duyệt và sao chép mật khẩu ứng dụng vào clipboard; chỉ in tên tài khoản `qlsv_app`. Hãy dán mật khẩu vào màn hình đăng nhập, rồi xóa nội dung clipboard nếu cần.
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Login
-```
-
-Các thao tác vòng đời giữ nguyên mật khẩu đã tạo:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Stop
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Start
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Down
-```
-
-`Down` chỉ gỡ container và mạng, giữ volume. Script không cung cấp thao tác xóa volume. Giữ `.local/credentials.xml` để chạy lại sau này. Nếu volume MySQL đã tồn tại nhưng thiếu file này, script dừng để tránh tạo mật khẩu không khớp; hãy khôi phục file bí mật trên đúng tài khoản/máy, hoặc dùng thông tin đăng nhập hiện có với lệnh Compose thủ công. Nếu chuyển máy, hãy chủ động sao lưu dữ liệu và quản lý thông tin đăng nhập theo cách phù hợp; sao chép file XML sang máy/tài khoản khác không cho phép giải mã.
-
-### Cấu hình thủ công nếu không dùng script
-
-`.env.example` mô tả các biến cần thiết và chỉ chứa giá trị mẫu. Không sử dụng nguyên giá trị placeholder. `.gitignore` và `.dockerignore` loại trừ `.env`; không commit mật khẩu thật hoặc đưa chúng vào báo cáo. Quy trình dưới đây dùng biến môi trường và một file rỗng riêng, không cần đọc, in hoặc sửa `.env`.
-
-Với lần khởi tạo mới, đặt biến môi trường trong cửa sổ PowerShell hiện tại bằng lệnh dưới đây. Các lệnh này không in mật khẩu và chỉ tạo mật khẩu ngẫu nhiên cho lần triển khai cục bộ này. Nếu đang dùng volume hiện có, hãy lấy lại thông tin đăng nhập tương ứng từ nơi quản lý bí mật thay cho việc tạo mật khẩu mới:
-
-```powershell
-function New-DemoSecret {
-    $secretBytes = New-Object byte[] 32
-    $secretRng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-    try {
-        $secretRng.GetBytes($secretBytes)
-        [Convert]::ToBase64String($secretBytes)
-    } finally {
-        $secretRng.Dispose()
-    }
-}
-$env:DB_NAME = 'qlsv'
-$env:DB_USER = 'qlsv_app'
-$env:DB_PASSWORD = New-DemoSecret
-$env:MYSQL_ROOT_PASSWORD = New-DemoSecret
-```
-
-Hãy lưu mật khẩu vào nơi quản lý bí mật phù hợp nếu cần dùng lại dữ liệu sau khi đóng cửa sổ terminal. MySQL lưu tài khoản trong volume; đổi các biến môi trường sau lần khởi tạo đầu tiên không tự đổi mật khẩu tài khoản đã có. Nếu đã có volume, dùng lại thông tin khởi tạo của volume đó.
-
-## Khởi chạy
-
-Tại thư mục dự án, dùng script Windows đã giới thiệu ở trên:
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Validate
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Up
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Ps
-```
-
-Nếu cấu hình biến môi trường thủ công, tạo file rỗng riêng rồi chỉ định rõ cho Compose, tránh việc tự động đọc `.env`:
-
-```powershell
-New-Item -ItemType Directory -Path .local -Force | Out-Null
-[System.IO.File]::WriteAllText((Join-Path (Get-Location) '.local/empty.env'), [string]::Empty)
-docker compose --env-file .local/empty.env --project-name qlsv-trancong config --quiet
-docker compose --env-file .local/empty.env --project-name qlsv-trancong up -d --build
-docker compose --env-file .local/empty.env --project-name qlsv-trancong ps
-```
-
-Lần đầu cần tải image, cài dependencies và khởi tạo MySQL. Đợi `db`, `app` và `nginx` báo `healthy` trước khi demo. `Dockerfile` của Express giữ nguyên, dùng Node.js 24 Alpine và chạy bằng user `node`.
-
-- Website qua Nginx: <http://localhost:8082>
-- Kiểm tra Nginx, ứng dụng và MySQL: <http://localhost:8082/health>
-- phpMyAdmin: <http://localhost:5056>
-
-Đăng nhập phpMyAdmin bằng tài khoản `DB_USER` (mặc định `qlsv_app`) cùng mật khẩu ứng dụng đã tự đặt. Server MySQL đã được cấu hình là `db`. Không cần dùng tài khoản root để demo dữ liệu.
-
-Nếu Docker Desktop cảnh báo cổng đang được dùng, dừng ứng dụng đang chiếm cổng rồi chạy lại. Không đổi cổng ngầm vì đề tài yêu cầu `8082` và `5056`.
-
-## Kiểm tra
+## Kiểm tra thực tế
 
 ```powershell
 npm ci
@@ -151,89 +157,89 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -A
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Up
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Ps
 docker exec qlsv-trancong-nginx-1 nginx -t
+docker exec qlsv-trancong-prometheus-1 promtool check config /etc/prometheus/prometheus.yml
 npm run test:integration
 npm run test:proxy
+npm run test:monitoring
 curl.exe --fail --silent --show-error http://localhost:8082/health
+curl.exe --fail --silent --show-error http://localhost:9091/-/ready
+curl.exe --fail --silent --show-error 'http://localhost:9091/api/v1/query?query=up'
+curl.exe --fail --silent --show-error http://localhost:3001/api/health
 curl.exe --silent --show-error --head http://localhost:8082/
 curl.exe --fail --silent --show-error --output NUL --write-out 'phpMyAdmin HTTP %{http_code}' http://localhost:5056/
 ```
 
-`npm run check` kiểm tra cú pháp JavaScript. `npm test` kiểm tra các quy tắc dữ liệu và tính điểm. `npm run test:integration` kiểm tra CRUD, gán lớp, gán điểm, tìm kiếm, lọc và xác thực qua `http://localhost:8082`; dữ liệu tạm được dọn sau khi hoàn thành. `npm run test:proxy` kiểm tra các header bảo mật, CSP, phản hồi `200/404/403/413` và CSS qua Nginx, không tạo dữ liệu. Lệnh `curl.exe --head` phải hiển thị đủ bốn header trong bảng trên, đặc biệt ba header `X-Content-Type-Options`, `X-Frame-Options` và `Referrer-Policy`.
+`npm run check` kiểm tra cú pháp JavaScript; `npm test` kiểm tra dữ liệu, tính điểm và instrumentation. Kiểm thử tích hợp chạy CRUD qua Nginx và dọn dữ liệu tạm; kiểm thử proxy kiểm tra header, CSP và các phản hồi HTTP. Kiểm thử monitoring kiểm tra targets, truy vấn, datasource/dashboard và dữ liệu thực tế; không đưa mật khẩu vào lệnh hoặc báo cáo. Chi tiết kết quả và minh chứng được ghi trong `KIEM_TRA.md`, `docs/evidence/phase3/`.
 
-Healthcheck MySQL đăng nhập bằng tài khoản ứng dụng qua TCP và chạy `SELECT 1`, vì vậy kiểm tra được cả thông tin xác thực và cơ sở dữ liệu đích. Healthcheck ứng dụng gọi `/health` có giới hạn thời gian; endpoint này cũng thực hiện truy vấn MySQL. Healthcheck Nginx dùng `wget` gọi `http://127.0.0.1/health` bên trong container và đi qua proxy tới Express/MySQL. `depends_on` đợi MySQL healthy trước khi chạy ứng dụng và phpMyAdmin, rồi đợi ứng dụng healthy trước khi chạy Nginx. Cả bốn service có `restart: unless-stopped`.
+Kết quả nghiệm thu ngày 16/10/2026: Compose build/up và cấu hình đạt; 10 service đang chạy, service init exit 0; 6 targets UP; 16/16 kiểm thử đơn vị, 9 nhóm CRUD, 6 kiểm tra proxy và 9 nhóm monitoring đạt. Dashboard có dữ liệu thật ở cả 17 panel với 21 truy vấn, CPU/RAM bao phủ đủ 10 service của dự án. Website, `/health`, phpMyAdmin và Grafana health đều HTTP 200.
 
-Xem nhật ký phục vụ chẩn đoán, không chia sẻ thông tin bí mật trong nhật ký:
+Có thể chụp lại minh chứng bằng Chrome/Edge trên máy sau khi stack sẵn sàng:
 
 ```powershell
+node scripts/capture-monitoring-evidence.js
+```
+
+Script tự tìm trình duyệt Chromium; nếu trình duyệt ở vị trí khác, đặt biến môi trường `CHROME_PATH` tới file thực thi trước khi chạy. Script giữ mật khẩu Grafana trong bộ nhớ khi đăng nhập và chỉ in đường dẫn ảnh đã lưu. Bộ minh chứng hiện có gồm Compose ps, 3 ảnh và 6 file JSON, được lưu trong Git nhưng loại khỏi Docker build.
+
+Trong Prometheus Targets, 6 job `prometheus`, `express`, `cadvisor`, `docker-metadata`, `mysql`, `nginx` phải **UP**; truy vấn `up` trả 6 giá trị bằng 1. Cấu hình đáp ứng đủ 5 targets bắt buộc và bổ sung metadata để tương thích Docker Desktop. `mysql_up = 1` và `nginx_up = 1` xác nhận exporter kết nối được đích. Grafana `/api/health` phải có `database: ok`; đăng nhập, mở datasource Prometheus và **Save & test**, sau đó mở dashboard để xem dữ liệu.
+
+Healthcheck MySQL chạy `SELECT 1` với user ứng dụng; Express gọi `/health`; Nginx gọi `/health` qua proxy; Prometheus dùng `/-/ready`; Grafana dùng `/api/health`. `depends_on` bảo đảm khởi tạo database/exporter và chờ các service cần thiết sẵn sàng.
+
+Xem log khi cần:
+
+```powershell
+docker logs --tail=80 qlsv-trancong-prometheus-1
+docker logs --tail=80 qlsv-trancong-grafana-1
+docker logs --tail=80 qlsv-trancong-mysql-exporter-1
+docker logs --tail=80 qlsv-trancong-nginx-exporter-1
 docker logs --tail=80 qlsv-trancong-nginx-1
-docker logs --tail=80 qlsv-trancong-app-1
-docker logs --tail=80 qlsv-trancong-db-1
-docker logs --tail=80 qlsv-trancong-phpmyadmin-1
 ```
 
 ## Dữ liệu và cách tính điểm
 
-`database/init.sql` tạo 4 bảng sử dụng InnoDB và `utf8mb4`:
-
-| Bảng | Nội dung và ràng buộc chính |
-| --- | --- |
-| `classes` | Mã lớp duy nhất, tên lớp, niên khóa |
-| `students` | MSSV duy nhất, email duy nhất nếu có, lớp có thể để trống |
-| `subjects` | Mã môn duy nhất, số tín chỉ từ 1 đến 10 |
-| `scores` | Điểm thành phần từ 0 đến 10; duy nhất theo sinh viên, môn, học kỳ, năm học |
-
-Dữ liệu mẫu có 3 lớp, 8 sinh viên, 4 môn học và 12 bản ghi điểm. Bản ghi Trần Đức Công có MSSV `DTC245200418`; các thông tin liên hệ và dữ liệu sinh viên khác là minh họa. Miền email `example.test` dùng cho dữ liệu demo.
-
-Điểm tổng kết môn được MySQL tự tính và lưu trong cột generated `total_score`:
+`database/init.sql` tạo 4 bảng InnoDB/`utf8mb4`: `classes`, `students`, `subjects`, `scores`. Seed gồm 3 lớp, 8 sinh viên, 4 môn và 12 bản ghi điểm; Trần Đức Công có MSSV `DTC245200418`. Email miền `example.test` và thông tin sinh viên khác là dữ liệu minh họa.
 
 ```text
-Điểm tổng kết = ROUND(chuyên cần × 10% + giữa kỳ × 30% + cuối kỳ × 60%, 2)
-Điểm trung bình = ROUND(Σ(điểm tổng kết × số tín chỉ) / Σ(số tín chỉ), 2)
+Điểm môn = ROUND(chuyên cần × 10% + giữa kỳ × 30% + cuối kỳ × 60%, 2)
+Điểm trung bình = ROUND(Σ(điểm môn × số tín chỉ) / Σ(số tín chỉ), 2)
 ```
 
-Điểm trung bình chỉ dùng các bản ghi điểm hiện có trong phạm vi hiển thị/lọc; chưa có quy tắc chọn lần thi cao nhất hay xử lý học lại. Cùng một môn có thể xuất hiện ở các kỳ/năm khác nhau và được tính theo từng bản ghi. Sinh viên chưa có điểm hiển thị chưa có dữ liệu, không xem là điểm 0. Mốc đạt phục vụ demo là điểm tổng kết từ 5,0; đây không phải quy chế đào tạo chính thức của trường.
+MySQL tự tính cột generated `total_score`. Trung bình tính theo các bản ghi trong phạm vi lọc; chưa chọn lần thi cao nhất hoặc xử lý học lại. Chưa có điểm được hiển thị là chưa có dữ liệu. Mốc đạt demo 5,0 không thay thế quy chế chính thức của trường.
 
-Khóa ngoại đều dùng `RESTRICT`: không xóa lớp đang có sinh viên, sinh viên đang có điểm, hoặc môn đang có điểm. Hãy chuyển sinh viên ra khỏi lớp hoặc xóa bản ghi phụ thuộc trước. Các mã không được trùng; không nhập trùng bộ sinh viên/môn/học kỳ/năm học.
-
-Script khởi tạo chỉ chạy khi volume MySQL còn trống. Sửa `init.sql` rồi khởi động lại không tự thay đổi dữ liệu đang có. Named volume `mysql_data` giữ dữ liệu khi khởi động lại container.
+Khóa ngoại dùng `RESTRICT`: không xóa lớp còn sinh viên, sinh viên còn điểm hoặc môn còn điểm. Mã lớp/MSSV/mã môn và email nếu có phải duy nhất. Điểm trong 0–10; tín chỉ trong 1–10; bộ sinh viên/môn/học kỳ/năm học không trùng. Seed chỉ chạy khi volume MySQL trống; giai đoạn 3 không khởi tạo lại seed.
 
 ## Dừng và chạy lại
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Stop
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Start
-```
-
-Hoặc gỡ container và mạng, vẫn giữ dữ liệu:
-
-```powershell
+# Gỡ container/mạng, giữ cả ba volume dữ liệu:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Down
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Up
 ```
 
-Chỉ khi chủ động muốn **xóa toàn bộ dữ liệu MySQL của dự án và nạp lại seed**, tự chạy các lệnh sau. Hành động này không thể hoàn tác nếu chưa sao lưu:
-
-```powershell
-docker compose --env-file .local/empty.env --project-name qlsv-trancong down --volumes
-docker compose --env-file .local/empty.env --project-name qlsv-trancong up -d --build
-```
+Không xóa volume khi nâng giai đoạn hoặc chạy lại demo. Sao lưu MySQL và giữ file DPAPI trước khi chuyển máy. Nếu cổng bị chiếm, dừng ứng dụng đang dùng cổng rồi chạy lại; các cổng của đề tài được giữ cố định.
 
 ## Cấu trúc chính
 
 ```text
-app.js                  Khởi tạo Express và các route
-Dockerfile              Image Node.js 24 Alpine, chạy bằng user node
-docker-compose.yml      Nginx, app nội bộ, MySQL 8.4, phpMyAdmin
-nginx/default.conf      Reverse proxy, security headers, log stdout/stderr
-.env.example            Mẫu biến môi trường, không có mật khẩu thật
-database/init.sql       Schema, ràng buộc và dữ liệu demo
-scripts/local-stack.ps1 Quản lý stack Windows, giữ mật khẩu bằng DPAPI
-views/                  Các trang EJS tiếng Việt
-public/                 CSS và tài nguyên tĩnh
-src/                    Route, kết nối MySQL, truy vấn và kiểm tra dữ liệu
-scripts/proxy-test.js   Kiểm tra bảo mật và phản hồi qua Nginx
-scripts/                Kiểm tra cú pháp, kiểm thử tích hợp, chạy local Windows
-tests/                  Kiểm thử quy tắc nhập liệu và tính điểm
-README.md               Hướng dẫn chạy và kiểm tra
-KIEM_TRA.md              Báo cáo lệnh và kết quả kiểm tra thực tế
+docker-compose.yml             Website, database và toàn bộ monitoring
+Dockerfile                     Node.js 24 Alpine, chạy bằng user node
+nginx/default.conf             Proxy, security headers, status nội bộ, log
+monitoring/prometheus/         Cấu hình scrape 6 targets
+monitoring/grafana/provisioning/ Datasource và dashboard provider
+monitoring/grafana/dashboards/  Student Management Monitoring
+src/metrics.js                 Metrics HTTP và tài nguyên Node.js
+scripts/bootstrap-monitoring.js Khởi tạo user exporter trên volume hiện có
+scripts/container-metadata.js  Ánh xạ container ID/service của riêng project
+scripts/capture-monitoring-evidence.js Chụp Targets và hai nhóm dashboard
+scripts/local-stack.ps1        Chạy stack, DPAPI và Docker secret runtime
+scripts/                       Kiểm tra cú pháp, CRUD, proxy, monitoring
+tests/                         Validation, metrics và Docker metadata
+src/, views/, public/          CRUD Express/EJS và giao diện tiếng Việt
+database/init.sql              Schema, ràng buộc và seed
+README.md                      Hướng dẫn chạy
+PROGRESS.md                    Tiến độ các giai đoạn
+KIEM_TRA.md                     Báo cáo kiểm tra thực tế
+docs/evidence/phase3/           Minh chứng giai đoạn 3, không chứa bí mật
 ```

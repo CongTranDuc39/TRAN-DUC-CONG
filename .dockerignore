@@ -11,5 +11,6 @@ npm-debug.log*
 coverage
 test-results
 artifacts
+docs/evidence
 tmp
 *.log

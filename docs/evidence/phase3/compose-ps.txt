@@ -1,0 +1,11 @@
+NAME                                 IMAGE                                   COMMAND                  SERVICE              CREATED          STATUS                    PORTS
+qlsv-trancong-app-1                  qlsv-trancong-app                       "docker-entrypoint.s…"   app                  3 minutes ago    Up 3 minutes (healthy)    3000/tcp
+qlsv-trancong-cadvisor-1             ghcr.io/google/cadvisor:0.55.1          "/usr/bin/cadvisor -…"   cadvisor             10 minutes ago   Up 10 minutes (healthy)   8080/tcp
+qlsv-trancong-container-metadata-1   qlsv-trancong-app                       "docker-entrypoint.s…"   container-metadata   3 minutes ago    Up 3 minutes              3000/tcp
+qlsv-trancong-db-1                   mysql:8.4                               "docker-entrypoint.s…"   db                   46 minutes ago   Up 26 minutes (healthy)   3306/tcp, 33060/tcp
+qlsv-trancong-grafana-1              grafana/grafana:13.2.3                  "/run.sh"                grafana              11 minutes ago   Up 59 seconds (healthy)   127.0.0.1:3001->3000/tcp
+qlsv-trancong-mysql-exporter-1       prom/mysqld-exporter:v0.20.0            "/bin/mysqld_exporte…"   mysql-exporter       11 minutes ago   Up 11 minutes             9104/tcp
+qlsv-trancong-nginx-1                nginx:stable-alpine                     "/docker-entrypoint.…"   nginx                11 minutes ago   Up 11 minutes (healthy)   127.0.0.1:8082->80/tcp
+qlsv-trancong-nginx-exporter-1       nginx/nginx-prometheus-exporter:1.4.1   "/usr/bin/nginx-prom…"   nginx-exporter       11 minutes ago   Up 11 minutes
+qlsv-trancong-phpmyadmin-1           phpmyadmin:5.2-apache                   "/docker-entrypoint.…"   phpmyadmin           46 minutes ago   Up 45 minutes             127.0.0.1:5056->80/tcp
+qlsv-trancong-prometheus-1           prom/prometheus:v3.15.0                 "/bin/prometheus --c…"   prometheus           11 minutes ago   Up 3 minutes (healthy)    127.0.0.1:9091->9090/tcp
