@@ -24,7 +24,7 @@ function createApp(pool) {
   app.set('query parser', 'simple');
   app.use(helmet({
     // Demo uses HTTP localhost; HTTPS-only upgrade would prevent static assets in some browsers.
-    contentSecurityPolicy: { directives: { 'upgrade-insecure-requests': null } },
+    contentSecurityPolicy: { directives: { 'upgrade-insecure-requests': null, frameAncestors: ["'none'"] } },
     strictTransportSecurity: false
   }));
   app.use('/css', express.static(path.join(__dirname, '..', 'public', 'css')));
