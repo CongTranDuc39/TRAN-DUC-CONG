@@ -1,0 +1,15 @@
+node_modules
+.local
+npm-debug.log*
+.git
+.github
+.env
+.env.*
+!.env.example
+.agents
+.codex
+coverage
+test-results
+artifacts
+tmp
+*.log
