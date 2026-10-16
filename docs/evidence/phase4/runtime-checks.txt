@@ -1,0 +1,13 @@
+Collected UTC: 2026-10-16T06:08:43.9291561Z
+Name=/qlsv-trancong-loki-1 Ports={} ReadOnlyRootfs=true User=10001 Mounts=volume:/loki:RW=true:Volume=qlsv-trancong_loki_data;bind:/etc/loki/loki.yml:RW=false:Volume=;
+Name=/qlsv-trancong-promtail-1 Ports={} ReadOnlyRootfs=true User=0:0 Mounts=volume:/run/promtail:RW=true:Volume=qlsv-trancong_promtail_positions;bind:/etc/promtail/promtail.yml:RW=false:Volume=;bind:/var/run/docker.sock:RW=false:Volume=;
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+level=info ts=2026-10-16T06:08:44.449869747Z caller=main.go:109 msg="config is valid"
+Valid config file! No syntax issues found
+HTTP/1.1 404 Not Found
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+Website /health HTTP 200

@@ -10,8 +10,8 @@ const prometheusUrl = process.env.TEST_PROMETHEUS_URL || 'http://localhost:9091'
 const grafanaUrl = process.env.TEST_GRAFANA_URL || 'http://localhost:3001';
 const websiteUrl = process.env.TEST_BASE_URL || 'http://localhost:8082';
 const expectedJobs = ['cadvisor', 'docker-metadata', 'express', 'mysql', 'nginx', 'prometheus'];
-const expectedServices = ['app', 'cadvisor', 'container-metadata', 'db', 'grafana', 'mysql-exporter', 'nginx', 'nginx-exporter', 'phpmyadmin', 'prometheus'];
-const evidenceDir = path.join(projectRoot, 'docs', 'evidence', 'phase3');
+const requiredServices = ['app', 'cadvisor', 'container-metadata', 'db', 'grafana', 'mysql-exporter', 'nginx', 'nginx-exporter', 'phpmyadmin', 'prometheus'];
+const evidenceDir = path.resolve(projectRoot, process.env.MONITORING_EVIDENCE_DIR || 'docs/evidence/phase3');
 const requestTimeoutMs = 8000;
 const maxAttempts = 3;
 const deadline = Date.now() + 110000;
@@ -145,10 +145,19 @@ async function runChecks(dashboardDefinition) {
   }));
   const metadataPayload = await jsonRequest(grafanaUrl, '/api/datasources/proxy/uid/prometheus/api/v1/query?query=' + encodeURIComponent('qlsv_container_info{job="docker-metadata",project="qlsv-trancong"}'), true);
   const containerMetadata = assertVector(metadataPayload, 'Docker project container metadata');
-  assert.deepEqual(containerMetadata.map((item) => item.metric.service).sort(), expectedServices, 'Read-only Docker metadata must cover all ten Compose services');
+  const currentServices = [...new Set(containerMetadata.map((item) => item.metric.service))].sort();
+  assert.ok(currentServices.length >= requiredServices.length, 'Read-only Docker metadata must cover at least the ten original Compose services');
+  for (const service of requiredServices) {
+    assert.ok(currentServices.includes(service), 'Docker metadata must include required service ' + service);
+  }
+  const containerIds = new Set();
   for (const item of containerMetadata) {
     assert.equal(Number(item.value[1]), 1, 'Metadata info sample must equal 1');
     assert.match(item.metric.container_id, /^[a-f0-9]{64}$/, 'Metadata must expose a real Docker container ID');
+    assert.equal(item.metric.project, 'qlsv-trancong', 'Metadata must remain scoped to this Compose project');
+    assert.match(item.metric.service, /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/, 'Metadata must expose a valid Compose service');
+    assert.ok(!containerIds.has(item.metric.container_id), 'Metadata must not repeat a Docker container ID');
+    containerIds.add(item.metric.container_id);
   }
   const panelResults = (panelId, refId = 'A') => {
     const result = queryResults.find((item) => item.panelId === panelId && item.refId === refId);
@@ -158,8 +167,8 @@ async function runChecks(dashboardDefinition) {
 
   const cpu = panelResults(101);
   const ram = panelResults(102);
-  assert.deepEqual(cpu.map((item) => item.metric.service).sort(), expectedServices, 'CPU must cover all ten Compose services');
-  assert.deepEqual(ram.map((item) => item.metric.service).sort(), expectedServices, 'RAM must cover all ten Compose services');
+  assert.deepEqual(cpu.map((item) => item.metric.service).sort(), currentServices, 'CPU must cover every current Compose service exactly once');
+  assert.deepEqual(ram.map((item) => item.metric.service).sort(), currentServices, 'RAM must cover every current Compose service exactly once');
   assert.ok(cpu.some((item) => Number(item.value[1]) > 0), 'CPU must show actual nonzero activity');
   for (const item of cpu) assert.ok(Number(item.value[1]) >= 0, 'CPU cannot be negative');
   for (const item of ram) assert.ok(Number(item.value[1]) > 0, 'Container RAM must be positive');
@@ -177,10 +186,11 @@ async function runChecks(dashboardDefinition) {
   assert.equal(scrapeSamples.length, expectedJobs.length);
   for (const item of scrapeSamples) assert.equal(Number(item.value[1]), 1);
   check('All ' + queryResults.length + ' dashboard queries return fresh finite measurements through Grafana');
-  check('CPU/RAM cover all 10 services using actual cAdvisor samples joined with Docker metadata; HTTP status/error, MySQL and Nginx panels contain real data');
+  check('CPU/RAM cover all ' + currentServices.length + ' current services using actual cAdvisor samples joined with Docker metadata; HTTP status/error, MySQL and Nginx panels contain real data');
 
   return {
     checks,
+    containerServiceCount: currentServices.length,
     files: {
       'prometheus-targets.json': { collectedAt: new Date().toISOString(), targets },
       'prometheus-up.json': upPayload,
@@ -218,7 +228,7 @@ async function main() {
     completedAt: new Date().toISOString(),
     checks: result.checks,
     targetCount: expectedJobs.length,
-    containerServiceCount: expectedServices.length,
+    containerServiceCount: result.containerServiceCount,
     dashboardTitle: 'Student Management Monitoring',
     dashboardPanelCount: dashboardDefinition.panels.filter((panel) => panel.type !== 'row').length,
     dashboardQueryCount: result.files['dashboard-query-results.json'].queries.length,
@@ -228,7 +238,7 @@ async function main() {
   for (const [filename, payload] of Object.entries({ ...result.files, 'summary.json': summary })) {
     await fs.writeFile(path.join(evidenceDir, filename), JSON.stringify(payload, null, 2) + '\n', 'utf8');
   }
-  console.log('PASS monitoring: ' + result.checks.length + ' verification groups. Evidence: docs/evidence/phase3/');
+  console.log('PASS monitoring: ' + result.checks.length + ' verification groups. Evidence: ' + path.relative(projectRoot, evidenceDir).split(path.sep).join('/') + '/');
 }
 
 main().catch((error) => {

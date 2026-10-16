@@ -174,6 +174,39 @@ services:
       retries: 5
       start_period: 20s
 
+  loki:
+    image: grafana/loki:3.7.8
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/loki.yml"]
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./monitoring/loki/loki.yml:/etc/loki/loki.yml:ro
+      - loki_data:/loki
+
+  promtail:
+    image: grafana/promtail:3.5.8
+    restart: unless-stopped
+    command: ["-config.file=/etc/promtail/promtail.yml"]
+    # Exception: the Docker log reader needs access to the root-owned socket.
+    # The read-only mount does not restrict Docker API verbs; see README.
+    user: "0:0"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./monitoring/promtail/promtail.yml:/etc/promtail/promtail.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - promtail_positions:/run/promtail
+    depends_on:
+      loki:
+        condition: service_started
+
   grafana:
     image: grafana/grafana:13.2.3
     restart: unless-stopped
@@ -197,6 +230,8 @@ services:
     depends_on:
       prometheus:
         condition: service_healthy
+      loki:
+        condition: service_started
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--spider", "--timeout=4", "http://127.0.0.1:3000/api/health"]
       interval: 15s
@@ -218,3 +253,5 @@ volumes:
   mysql_data:
   prometheus_data:
   grafana_data:
+  loki_data:
+  promtail_positions:

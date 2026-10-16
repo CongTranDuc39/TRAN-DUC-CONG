@@ -1,4 +1,102 @@
-# Báo cáo triển khai và kiểm tra — Giai đoạn 3
+# Báo cáo triển khai và kiểm tra — Giai đoạn 4
+
+Ngày: 16/10/2026. Đề tài: **Hệ thống quản lý sinh viên** — Trần Đức Công, MSSV DTC245200418, lớp CNTT K23I. Giảng viên: Lê Khánh Dương, Đại học Công nghệ Thông tin và Truyền thông.
+
+## Phạm vi giai đoạn 4
+
+Thêm Loki `3.7.8`, Promtail `3.5.8` và datasource Loki provision tự động trong Grafana. Website/Nginx `localhost:8082`, phpMyAdmin `localhost:5056`, Prometheus `localhost:9091`, Grafana `localhost:3001` giữ nguyên. Không publish Loki hoặc Promtail ra host; không đổi project Compose `qlsv-trancong`, volume MySQL hay seed.
+
+Promtail lọc Docker label `com.docker.compose.project=qlsv-trancong` ngay tại API discovery, tiếp tục giữ đúng project và whitelist `app|nginx|db|phpmyadmin` trong relabel. Stream có nhãn logic `project="student-management"`, `service`, `container`, `stream`. MySQL dùng nhãn `service="db"` đúng tên service hiện có. Không dùng glob đọc log container khác; không đưa environment Docker thành label.
+
+Loki lưu chunks, index, WAL và trạng thái compactor trong named volume `loki_data`; Promtail lưu vị trí đọc trong `promtail_positions`. Retention `168h`, TSDB schema v13/index `24h`, compactor bật retention, delete-request store `filesystem`, chu kỳ 10 phút và delay xóa chunks 2 giờ. Không khẳng định đã chờ đủ 7 ngày; kiểm tra cấu hình hiện tại và việc ghi/đọc dữ liệu thực.
+
+Không đọc, in, sửa hoặc commit `.env`. Compose chạy qua `scripts/local-stack.ps1` với `--env-file .local/empty.env`. Bí mật runtime giữ trong `.local/` bị loại khỏi Git/Docker build, không ghi vào log hoặc minh chứng.
+
+| File/nhóm file | Thay đổi giai đoạn 4 |
+| --- | --- |
+| `docker-compose.yml` | Thêm Loki/Promtail, mount cấu hình chỉ đọc, hai named volume; giữ URL và các service hiện có |
+| `monitoring/loki/loki.yml` | Loki một node, TSDB v13/filesystem, WAL, retention 7 ngày |
+| `monitoring/promtail/promtail.yml` | Docker API discovery đúng project, whitelist bốn service, gắn label log |
+| `monitoring/grafana/provisioning/datasources/loki.yml` | Datasource Loki UID `loki`, URL `http://loki:3100` |
+| `monitoring/logql/queries.json` | Bảy truy vấn LogQL: toàn bộ log, health, count, HTTP 4xx/5xx và ba service |
+| `nginx/default.conf` | Access log văn bản method/URI/protocol/status ra stdout, bỏ query/header/body; error log stderr |
+| `src/request-logging.js`, `src/app.js` | JSON log request Express bằng route chuẩn hóa, status, thời gian; không ghi dữ liệu đầu vào |
+| `tests/request-logging.test.js` | Kiểm tra an toàn nội dung log request |
+| `scripts/logging-test.js`, `scripts/capture-logging-evidence.js`, `package.json` | Kiểm tra readiness/datasource/LogQL và chụp minh chứng Grafana |
+| `scripts/monitoring-test.js` | Kiểm tra CPU/RAM theo danh sách service hiện tại thay cho cố định 10 service |
+| `README.md`, `PROGRESS.md`, `KIEM_TRA.md` | Hướng dẫn vận hành, LogQL, kết quả và giới hạn |
+| `docs/evidence/phase4/` | Compose ps, năm ảnh Grafana/Explore, kết quả API và tái kiểm tra metrics |
+
+## Kết quả kiểm tra giai đoạn 4
+
+**Đã hoàn thành kiểm tra thực tế giai đoạn 4; tất cả kiểm tra dưới đây đạt.** Năm ảnh Grafana đã được mở xem và đối chiếu với kết quả API. Các phần giai đoạn 1/2/3 phía dưới lưu lịch sử.
+
+| Kiểm tra | Lệnh/thao tác | Kết quả giai đoạn 4 |
+| --- | --- | --- |
+| Compose config | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Validate` → `docker compose config --quiet` | Đạt, exit 0 |
+| Build và khởi chạy | `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Up` → `docker compose up -d --build` | Đạt, build/up exit 0 |
+| Trạng thái container | Action `Ps` → `docker compose ps`; lưu `docs/evidence/phase4/compose-ps.txt` | 12 service đang chạy |
+| Cú pháp Loki/Promtail | Loki `-verify-config=true`, Promtail `-check-syntax` | Đạt, cả hai cấu hình hợp lệ |
+| Cú pháp Nginx/JavaScript | `docker exec qlsv-trancong-nginx-1 nginx -t`, `npm run check` | Đạt, Nginx syntax/reload và 21 file JavaScript |
+| Unit test/log an toàn | `npm test` | Đạt, 19/19 test |
+| Loki readiness | Grafana datasource proxy `/api/datasources/proxy/uid/loki/ready` | HTTP 200 |
+| Grafana health | `GET http://localhost:3001/api/health` | Đạt, `database: ok` trong kiểm thử monitoring |
+| Datasource Loki | `GET /api/datasources/uid/loki/health` sau khi xác thực Grafana | Đạt, status `OK` |
+| LogQL thật và nhãn | `npm run test:logs`; truy vấn toàn bộ log, health, app, db, phpMyAdmin | Đạt, 9 nhóm kiểm tra; cả 7 truy vấn có dữ liệu thực, nhãn chỉ đúng project và bốn service thu thập |
+| LogQL HTTP 4xx/5xx | GET `http://localhost:8082/__loki_probe_404` rồi truy vấn regexp status | Đạt, request HTTP 404 xuất hiện trong Loki; truy vấn health có HTTP 200, không cố ý tạo 5xx |
+| Đếm log | `sum(count_over_time({project="student-management"}[5m]))` | Đạt, một mẫu số thực dương và mới |
+| Prometheus và dashboard hiện có | `npm run test:monitoring`, evidence dir `docs/evidence/phase4/monitoring` | Đạt, 9 nhóm; 6 targets UP, 17 panel/21 truy vấn có dữ liệu thực, CPU/RAM đủ 12 service |
+| Website, health, phpMyAdmin | GET `:8082/`, `:8082/health`, `:5056/` | HTTP 200; `/health` vẫn 200 sau toàn bộ kiểm tra log |
+| CRUD và proxy/security headers | `npm run test:integration`, `npm run test:proxy` | Đạt, 9 nhóm CRUD đã dọn dữ liệu tạm; 6 kiểm tra proxy, đủ bốn security headers |
+| Dữ liệu demo sau kiểm thử | SQL đếm trực tiếp bốn bảng | Giữ nguyên 8 sinh viên, 3 lớp, 4 môn học, 12 bản ghi điểm |
+| Volume/cổng/hardening | Docker inspect chọn trường, không in environment; lưu `runtime-checks.txt` | Đạt, Loki/Promtail dùng đúng named volume và root filesystem chỉ đọc; socket Promtail `RW=false`; không publish Loki/Promtail/app, giữ bốn cổng host cũ |
+| Minh chứng Grafana | `npm run capture:logs` và mở xem từng ảnh | Đạt, đủ năm PNG: datasource kết nối thành công, toàn bộ log, health 200, HTTP 404 an toàn và count có dữ liệu số |
+
+Các truy vấn bắt buộc dùng nguyên văn:
+
+```logql
+{project="student-management"}
+{project="student-management", service="nginx"} |= "GET /health"
+sum(count_over_time({project="student-management"}[5m]))
+{project="student-management", service="nginx"} |~ "\" [45][0-9]{2} "
+```
+
+Lệnh chạy bằng PowerShell, giữ riêng minh chứng metrics mới:
+
+```powershell
+npm run check
+npm test
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Validate
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Up
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Ps
+docker exec qlsv-trancong-nginx-1 nginx -t
+npm run test:integration
+npm run test:proxy
+$env:MONITORING_EVIDENCE_DIR = 'docs/evidence/phase4/monitoring'
+npm run test:monitoring
+Remove-Item Env:\MONITORING_EVIDENCE_DIR
+npm run test:logs
+npm run capture:logs
+curl.exe --fail --silent --show-error http://localhost:8082/health
+curl.exe --fail --silent --show-error 'http://localhost:9091/api/v1/query?query=up'
+curl.exe --fail --silent --show-error http://localhost:3001/api/health
+```
+
+## Minh chứng và giới hạn giai đoạn 4
+
+Danh mục và cách tái tạo nằm trong [docs/evidence/phase4/README.md](docs/evidence/phase4/README.md). Đã lưu `compose-ps.txt`, `runtime-checks.txt` và sáu JSON API; thư mục con `monitoring/` có sáu JSON tái kiểm tra Prometheus/dashboard. Năm ảnh `loki-datasource.png`, `explore-all.png`, `explore-health.png`, `explore-errors.png`, `explore-count.png` đã được mở xem: datasource có URL nội bộ và thông báo kết nối thành công; Explore có log thật, health 200, request 404 đúng đường dẫn và mẫu count dương. Không lưu mật khẩu, DPAPI, cookie hoặc Authorization header.
+
+Promtail chạy root để truy cập Docker socket; socket mount `:ro`, root filesystem chỉ đọc, `cap_drop: ALL`, `no-new-privileges`. Socket `:ro` không ngăn API ghi tới Docker daemon; đây là ngoại lệ hardening được ghi rõ, chưa phải phân quyền Docker API. Loki không authentication trong mạng Compose local, không publish ra host; filesystem một node chưa HA/backup. Image Loki distroless thiếu shell/curl/wget, do đó không khai báo Docker healthcheck không hoạt động; readiness `/ready` kiểm tra qua Grafana datasource proxy khi nghiệm thu. Retention xóa bất đồng bộ, có delay sau khi compactor đánh dấu; chưa quan sát hết 7 ngày.
+
+Promtail [đã EOL ngày 02/03/2026](https://grafana.com/docs/loki/latest/send-data/promtail/), được giữ theo yêu cầu đề tài; kế hoạch nâng cấp collector nên dùng Alloy. [Retention](https://grafana.com/docs/loki/latest/operations/storage/retention/) và [filesystem storage](https://grafana.com/docs/loki/latest/operations/storage/filesystem/) tham chiếu tài liệu Grafana chính thức.
+
+## Git giai đoạn 4
+
+- Mốc trước triển khai: `dedd6cb` — `feat: add prometheus and grafana monitoring`, trên `master` và `origin/master`.
+- Commit giai đoạn 4 dùng message `feat: add loki and promtail centralized logging`, sau khi toàn bộ kiểm tra đạt.
+- Đích push: `master` lên `origin` tại `https://github.com/CongTranDuc39/TRAN-DUC-CONG.git`; không force push. Hash và kết quả push báo riêng sau khi thực hiện; đối chiếu bằng `git log -1 --oneline` và `git status -sb`.
+
+## Lịch sử triển khai và kiểm tra — Giai đoạn 3
 
 Ngày: 16/10/2026. Đề tài: **Hệ thống quản lý sinh viên** — Trần Đức Công, MSSV DTC245200418, lớp CNTT K23I. Giảng viên: Lê Khánh Dương, Đại học Công nghệ Thông tin và Truyền thông.
 

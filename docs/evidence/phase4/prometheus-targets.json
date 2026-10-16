@@ -1,0 +1,127 @@
+{
+  "collectedAt": "2026-10-16T06:07:15.029Z",
+  "targets": [
+    {
+      "job": "cadvisor",
+      "instance": "cadvisor:8080",
+      "scrapeUrl": "http://cadvisor:8080/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-16T06:07:08.818381515Z",
+      "lastError": ""
+    },
+    {
+      "job": "docker-metadata",
+      "instance": "container-metadata:9256",
+      "scrapeUrl": "http://container-metadata:9256/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-16T06:07:09.689747973Z",
+      "lastError": ""
+    },
+    {
+      "job": "express",
+      "instance": "app:3000",
+      "scrapeUrl": "http://app:3000/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-16T06:07:11.036473592Z",
+      "lastError": ""
+    },
+    {
+      "job": "mysql",
+      "instance": "mysql-exporter:9104",
+      "scrapeUrl": "http://mysql-exporter:9104/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-16T06:07:13.42197084Z",
+      "lastError": ""
+    },
+    {
+      "job": "nginx",
+      "instance": "nginx-exporter:9113",
+      "scrapeUrl": "http://nginx-exporter:9113/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-16T06:07:10.740134275Z",
+      "lastError": ""
+    },
+    {
+      "job": "prometheus",
+      "instance": "prometheus:9090",
+      "scrapeUrl": "http://prometheus:9090/metrics",
+      "health": "up",
+      "lastScrape": "2026-10-16T06:07:03.527421818Z",
+      "lastError": ""
+    }
+  ],
+  "up": {
+    "status": "success",
+    "data": {
+      "resultType": "vector",
+      "result": [
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "prometheus:9090",
+            "job": "prometheus"
+          },
+          "value": [
+            1792130835.019,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "cadvisor:8080",
+            "job": "cadvisor"
+          },
+          "value": [
+            1792130835.019,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "nginx-exporter:9113",
+            "job": "nginx"
+          },
+          "value": [
+            1792130835.019,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "app:3000",
+            "job": "express"
+          },
+          "value": [
+            1792130835.019,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "mysql-exporter:9104",
+            "job": "mysql"
+          },
+          "value": [
+            1792130835.019,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "container-metadata:9256",
+            "job": "docker-metadata"
+          },
+          "value": [
+            1792130835.019,
+            "1"
+          ]
+        }
+      ]
+    }
+  }
+}

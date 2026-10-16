@@ -1,0 +1,1112 @@
+{
+  "title": "Student Management Monitoring",
+  "uid": "student-management",
+  "provisioned": true,
+  "panelCount": 17,
+  "queries": [
+    {
+      "panelId": 101,
+      "title": "CPU container",
+      "refId": "A",
+      "expr": "100 * sum by (service) (label_replace(rate(container_cpu_usage_seconds_total{job=\"cadvisor\",image!=\"\"}[5m]), \"container_id\", \"$1\", \"id\", \".*([a-f0-9]{64}).*\") * on (container_id) group_left(service) qlsv_container_info{job=\"docker-metadata\",project=\"qlsv-trancong\"})",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "service": "cadvisor"
+          },
+          "value": [
+            1792130752.691,
+            "0.44288226597037317"
+          ]
+        },
+        {
+          "metric": {
+            "service": "db"
+          },
+          "value": [
+            1792130752.691,
+            "1.5013957992657336"
+          ]
+        },
+        {
+          "metric": {
+            "service": "grafana"
+          },
+          "value": [
+            1792130752.691,
+            "7.878096552418123"
+          ]
+        },
+        {
+          "metric": {
+            "service": "nginx"
+          },
+          "value": [
+            1792130752.691,
+            "0.5431752451142625"
+          ]
+        },
+        {
+          "metric": {
+            "service": "mysql-exporter"
+          },
+          "value": [
+            1792130752.691,
+            "0.17753766032969945"
+          ]
+        },
+        {
+          "metric": {
+            "service": "nginx-exporter"
+          },
+          "value": [
+            1792130752.691,
+            "0.02487255589629478"
+          ]
+        },
+        {
+          "metric": {
+            "service": "phpmyadmin"
+          },
+          "value": [
+            1792130752.691,
+            "0.030356529720746248"
+          ]
+        },
+        {
+          "metric": {
+            "service": "prometheus"
+          },
+          "value": [
+            1792130752.691,
+            "0.7514879232720797"
+          ]
+        },
+        {
+          "metric": {
+            "service": "promtail"
+          },
+          "value": [
+            1792130752.691,
+            "1.0550854002375196"
+          ]
+        },
+        {
+          "metric": {
+            "service": "loki"
+          },
+          "value": [
+            1792130752.691,
+            "1.4158908607643654"
+          ]
+        },
+        {
+          "metric": {
+            "service": "app"
+          },
+          "value": [
+            1792130752.691,
+            "1.7797868043205938"
+          ]
+        },
+        {
+          "metric": {
+            "service": "container-metadata"
+          },
+          "value": [
+            1792130752.691,
+            "0.12938133333333335"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 102,
+      "title": "RAM container",
+      "refId": "A",
+      "expr": "sum by (service) (label_replace(container_memory_working_set_bytes{job=\"cadvisor\",image!=\"\"}, \"container_id\", \"$1\", \"id\", \".*([a-f0-9]{64}).*\") * on (container_id) group_left(service) qlsv_container_info{job=\"docker-metadata\",project=\"qlsv-trancong\"})",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "service": "cadvisor"
+          },
+          "value": [
+            1792130752.691,
+            "27844608"
+          ]
+        },
+        {
+          "metric": {
+            "service": "db"
+          },
+          "value": [
+            1792130752.691,
+            "510484480"
+          ]
+        },
+        {
+          "metric": {
+            "service": "grafana"
+          },
+          "value": [
+            1792130752.691,
+            "275451904"
+          ]
+        },
+        {
+          "metric": {
+            "service": "nginx"
+          },
+          "value": [
+            1792130752.691,
+            "13008896"
+          ]
+        },
+        {
+          "metric": {
+            "service": "mysql-exporter"
+          },
+          "value": [
+            1792130752.691,
+            "9719808"
+          ]
+        },
+        {
+          "metric": {
+            "service": "nginx-exporter"
+          },
+          "value": [
+            1792130752.691,
+            "9371648"
+          ]
+        },
+        {
+          "metric": {
+            "service": "phpmyadmin"
+          },
+          "value": [
+            1792130752.691,
+            "54501376"
+          ]
+        },
+        {
+          "metric": {
+            "service": "prometheus"
+          },
+          "value": [
+            1792130752.691,
+            "79642624"
+          ]
+        },
+        {
+          "metric": {
+            "service": "promtail"
+          },
+          "value": [
+            1792130752.691,
+            "40525824"
+          ]
+        },
+        {
+          "metric": {
+            "service": "loki"
+          },
+          "value": [
+            1792130752.691,
+            "78950400"
+          ]
+        },
+        {
+          "metric": {
+            "service": "app"
+          },
+          "value": [
+            1792130752.691,
+            "42778624"
+          ]
+        },
+        {
+          "metric": {
+            "service": "container-metadata"
+          },
+          "value": [
+            1792130752.691,
+            "19697664"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 103,
+      "title": "Tổng request web",
+      "refId": "A",
+      "expr": "sum(qlsv_http_requests_total{job=\"express\",route!~\"/health|/metrics\"})",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {},
+          "value": [
+            1792130752.749,
+            "102"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 104,
+      "title": "Tổng lỗi HTTP 4xx / 5xx",
+      "refId": "A",
+      "expr": "sum(qlsv_http_errors_total{job=\"express\",route!~\"/health|/metrics\"})",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {},
+          "value": [
+            1792130752.751,
+            "16"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 105,
+      "title": "Độ trễ p95",
+      "refId": "A",
+      "expr": "histogram_quantile(0.95, sum by (le) (rate(qlsv_http_request_duration_seconds_bucket{job=\"express\",route!~\"/health|/metrics\"}[5m])))",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {},
+          "value": [
+            1792130752.747,
+            "0.0189916377927278"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 106,
+      "title": "Độ trễ trung bình",
+      "refId": "A",
+      "expr": "sum(rate(qlsv_http_request_duration_seconds_sum{job=\"express\",route!~\"/health|/metrics\"}[5m])) / sum(rate(qlsv_http_request_duration_seconds_count{job=\"express\",route!~\"/health|/metrics\"}[5m]))",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {},
+          "value": [
+            1792130752.763,
+            "0.006570735954545454"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 107,
+      "title": "Request web / giây",
+      "refId": "A",
+      "expr": "sum by (route) (rate(qlsv_http_requests_total{job=\"express\",route!~\"/health|/metrics\"}[5m]))",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "route": "/students"
+          },
+          "value": [
+            1792130752.707,
+            "0.02807155439214558"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/subjects"
+          },
+          "value": [
+            1792130752.707,
+            "0.03508944299018198"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/css/*"
+          },
+          "value": [
+            1792130752.707,
+            "0.0035089442990181973"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/js/*"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "__unmatched__"
+          },
+          "value": [
+            1792130752.707,
+            "0.010526832897054592"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/classes"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/scores"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/students/:id/edit"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/classes/:id/edit"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/classes/new"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/classes/:id"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/students/new"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/classes/:id/delete"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/students/:id"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/subjects/new"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/subjects/:id/edit"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/subjects/:id"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/scores/new"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/subjects/:id/delete"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/students/:id/delete"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/scores/:id/edit"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/scores/:id"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "route": "/scores/:id/delete"
+          },
+          "value": [
+            1792130752.707,
+            "0"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 108,
+      "title": "HTTP status — tổng số response",
+      "refId": "A",
+      "expr": "sum by (status_code) (qlsv_http_requests_total{job=\"express\",route!~\"/health|/metrics\"})",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "status_code": "200"
+          },
+          "value": [
+            1792130752.764,
+            "67"
+          ]
+        },
+        {
+          "metric": {
+            "status_code": "404"
+          },
+          "value": [
+            1792130752.764,
+            "5"
+          ]
+        },
+        {
+          "metric": {
+            "status_code": "403"
+          },
+          "value": [
+            1792130752.764,
+            "4"
+          ]
+        },
+        {
+          "metric": {
+            "status_code": "303"
+          },
+          "value": [
+            1792130752.764,
+            "19"
+          ]
+        },
+        {
+          "metric": {
+            "status_code": "409"
+          },
+          "value": [
+            1792130752.764,
+            "6"
+          ]
+        },
+        {
+          "metric": {
+            "status_code": "422"
+          },
+          "value": [
+            1792130752.764,
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 109,
+      "title": "Lỗi HTTP / giây",
+      "refId": "A",
+      "expr": "sum by (status_code) (rate(qlsv_http_errors_total{job=\"express\",route!~\"/health|/metrics\"}[5m]))",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "status_code": "404"
+          },
+          "value": [
+            1792130752.747,
+            "0.010526832897054592"
+          ]
+        },
+        {
+          "metric": {
+            "status_code": "403"
+          },
+          "value": [
+            1792130752.747,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "status_code": "409"
+          },
+          "value": [
+            1792130752.747,
+            "0"
+          ]
+        },
+        {
+          "metric": {
+            "status_code": "422"
+          },
+          "value": [
+            1792130752.747,
+            "0"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 201,
+      "title": "MySQL — kết nối thành công",
+      "refId": "A",
+      "expr": "mysql_up{job=\"mysql\"}",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "__name__": "mysql_up",
+            "instance": "mysql-exporter:9104",
+            "job": "mysql"
+          },
+          "value": [
+            1792130752.711,
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 202,
+      "title": "Kết nối MySQL hiện tại",
+      "refId": "A",
+      "expr": "mysql_global_status_threads_connected{job=\"mysql\"}",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "__name__": "mysql_global_status_threads_connected",
+            "instance": "mysql-exporter:9104",
+            "job": "mysql"
+          },
+          "value": [
+            1792130752.716,
+            "10"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 203,
+      "title": "Giới hạn kết nối MySQL",
+      "refId": "A",
+      "expr": "mysql_global_variables_max_connections{job=\"mysql\"}",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "__name__": "mysql_global_variables_max_connections",
+            "instance": "mysql-exporter:9104",
+            "job": "mysql"
+          },
+          "value": [
+            1792130752.763,
+            "151"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 204,
+      "title": "Nginx — stub_status",
+      "refId": "A",
+      "expr": "nginx_up{job=\"nginx\"}",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "__name__": "nginx_up",
+            "instance": "nginx-exporter:9113",
+            "job": "nginx"
+          },
+          "value": [
+            1792130752.747,
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 205,
+      "title": "MySQL — số kết nối / giới hạn",
+      "refId": "A",
+      "expr": "mysql_global_status_threads_connected{job=\"mysql\"}",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "__name__": "mysql_global_status_threads_connected",
+            "instance": "mysql-exporter:9104",
+            "job": "mysql"
+          },
+          "value": [
+            1792130752.774,
+            "10"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 205,
+      "title": "MySQL — số kết nối / giới hạn",
+      "refId": "B",
+      "expr": "mysql_global_variables_max_connections{job=\"mysql\"}",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "__name__": "mysql_global_variables_max_connections",
+            "instance": "mysql-exporter:9104",
+            "job": "mysql"
+          },
+          "value": [
+            1792130752.763,
+            "151"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 206,
+      "title": "Nginx — kết nối",
+      "refId": "A",
+      "expr": "nginx_connections_active{job=\"nginx\"}",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "__name__": "nginx_connections_active",
+            "instance": "nginx-exporter:9113",
+            "job": "nginx"
+          },
+          "value": [
+            1792130752.721,
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 206,
+      "title": "Nginx — kết nối",
+      "refId": "B",
+      "expr": "nginx_connections_reading{job=\"nginx\"}",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "__name__": "nginx_connections_reading",
+            "instance": "nginx-exporter:9113",
+            "job": "nginx"
+          },
+          "value": [
+            1792130752.766,
+            "0"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 206,
+      "title": "Nginx — kết nối",
+      "refId": "C",
+      "expr": "nginx_connections_writing{job=\"nginx\"}",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "__name__": "nginx_connections_writing",
+            "instance": "nginx-exporter:9113",
+            "job": "nginx"
+          },
+          "value": [
+            1792130752.763,
+            "1"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 206,
+      "title": "Nginx — kết nối",
+      "refId": "D",
+      "expr": "nginx_connections_waiting{job=\"nginx\"}",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "__name__": "nginx_connections_waiting",
+            "instance": "nginx-exporter:9113",
+            "job": "nginx"
+          },
+          "value": [
+            1792130752.763,
+            "0"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 207,
+      "title": "Nginx — request / giây",
+      "refId": "A",
+      "expr": "sum(rate(nginx_http_requests_total{job=\"nginx\"}[5m]))",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {},
+          "value": [
+            1792130752.749,
+            "0.5052879790586204"
+          ]
+        }
+      ]
+    },
+    {
+      "panelId": 208,
+      "title": "Prometheus — trạng thái 6 scrape targets",
+      "refId": "A",
+      "expr": "up{job=~\"prometheus|express|cadvisor|docker-metadata|mysql|nginx\"}",
+      "resultType": "vector",
+      "results": [
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "prometheus:9090",
+            "job": "prometheus"
+          },
+          "value": [
+            1792130752.767,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "cadvisor:8080",
+            "job": "cadvisor"
+          },
+          "value": [
+            1792130752.767,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "nginx-exporter:9113",
+            "job": "nginx"
+          },
+          "value": [
+            1792130752.767,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "app:3000",
+            "job": "express"
+          },
+          "value": [
+            1792130752.767,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "mysql-exporter:9104",
+            "job": "mysql"
+          },
+          "value": [
+            1792130752.767,
+            "1"
+          ]
+        },
+        {
+          "metric": {
+            "__name__": "up",
+            "instance": "container-metadata:9256",
+            "job": "docker-metadata"
+          },
+          "value": [
+            1792130752.767,
+            "1"
+          ]
+        }
+      ]
+    }
+  ],
+  "containerMetadata": [
+    {
+      "metric": {
+        "__name__": "qlsv_container_info",
+        "container_id": "73723a88ba6734cdc50084ff36fbf702113a37904505c85f1e619251b4cb8486",
+        "instance": "container-metadata:9256",
+        "job": "docker-metadata",
+        "name": "qlsv-trancong-cadvisor-1",
+        "project": "qlsv-trancong",
+        "service": "cadvisor"
+      },
+      "value": [
+        1792130752.791,
+        "1"
+      ]
+    },
+    {
+      "metric": {
+        "__name__": "qlsv_container_info",
+        "container_id": "7e44060f10677b0853599a0b7a56d13e4406791cd8e12a67254ba32b4e3f0ddb",
+        "instance": "container-metadata:9256",
+        "job": "docker-metadata",
+        "name": "qlsv-trancong-grafana-1",
+        "project": "qlsv-trancong",
+        "service": "grafana"
+      },
+      "value": [
+        1792130752.791,
+        "1"
+      ]
+    },
+    {
+      "metric": {
+        "__name__": "qlsv_container_info",
+        "container_id": "e1e8cd33b00ae3a42d84490076dd75d7a603f4e143fcaf376dc256e6e656ded8",
+        "instance": "container-metadata:9256",
+        "job": "docker-metadata",
+        "name": "qlsv-trancong-prometheus-1",
+        "project": "qlsv-trancong",
+        "service": "prometheus"
+      },
+      "value": [
+        1792130752.791,
+        "1"
+      ]
+    },
+    {
+      "metric": {
+        "__name__": "qlsv_container_info",
+        "container_id": "c71120c68b397ef03b866dd3a17bf8ab263964ca5cd4b0a72af0529e4c702ab1",
+        "instance": "container-metadata:9256",
+        "job": "docker-metadata",
+        "name": "qlsv-trancong-nginx-exporter-1",
+        "project": "qlsv-trancong",
+        "service": "nginx-exporter"
+      },
+      "value": [
+        1792130752.791,
+        "1"
+      ]
+    },
+    {
+      "metric": {
+        "__name__": "qlsv_container_info",
+        "container_id": "8a1174c2120a4c66719c110940e59a8f5ce58605176007f7970f2f832760cfd5",
+        "instance": "container-metadata:9256",
+        "job": "docker-metadata",
+        "name": "qlsv-trancong-nginx-1",
+        "project": "qlsv-trancong",
+        "service": "nginx"
+      },
+      "value": [
+        1792130752.791,
+        "1"
+      ]
+    },
+    {
+      "metric": {
+        "__name__": "qlsv_container_info",
+        "container_id": "be9ce9123871c40d00ff4ba135f1e99a07aea9f5353ccacce9de91f380de40aa",
+        "instance": "container-metadata:9256",
+        "job": "docker-metadata",
+        "name": "qlsv-trancong-mysql-exporter-1",
+        "project": "qlsv-trancong",
+        "service": "mysql-exporter"
+      },
+      "value": [
+        1792130752.791,
+        "1"
+      ]
+    },
+    {
+      "metric": {
+        "__name__": "qlsv_container_info",
+        "container_id": "c96e333fda65e418ff6e7364a82bba73ed65284a3627e87e7e73aa7a7e3a0545",
+        "instance": "container-metadata:9256",
+        "job": "docker-metadata",
+        "name": "qlsv-trancong-phpmyadmin-1",
+        "project": "qlsv-trancong",
+        "service": "phpmyadmin"
+      },
+      "value": [
+        1792130752.791,
+        "1"
+      ]
+    },
+    {
+      "metric": {
+        "__name__": "qlsv_container_info",
+        "container_id": "7aeb78175c9ef034d9b8dc899851d1ef244e801029cb9bf14967f9ed19f51ae8",
+        "instance": "container-metadata:9256",
+        "job": "docker-metadata",
+        "name": "qlsv-trancong-db-1",
+        "project": "qlsv-trancong",
+        "service": "db"
+      },
+      "value": [
+        1792130752.791,
+        "1"
+      ]
+    },
+    {
+      "metric": {
+        "__name__": "qlsv_container_info",
+        "container_id": "42e1197323ebd15ace812c24079998819dc74cd122b05ce910a671767384f258",
+        "instance": "container-metadata:9256",
+        "job": "docker-metadata",
+        "name": "qlsv-trancong-promtail-1",
+        "project": "qlsv-trancong",
+        "service": "promtail"
+      },
+      "value": [
+        1792130752.791,
+        "1"
+      ]
+    },
+    {
+      "metric": {
+        "__name__": "qlsv_container_info",
+        "container_id": "fb84c8b31c16685049a1046ad344a9c768b823e905b98d92c79f950a4bd9f4c6",
+        "instance": "container-metadata:9256",
+        "job": "docker-metadata",
+        "name": "qlsv-trancong-loki-1",
+        "project": "qlsv-trancong",
+        "service": "loki"
+      },
+      "value": [
+        1792130752.791,
+        "1"
+      ]
+    },
+    {
+      "metric": {
+        "__name__": "qlsv_container_info",
+        "container_id": "7813f86ca2fb36aae142f52d976bbab949950c03c2b5c2e2d30744b4be79ac99",
+        "instance": "container-metadata:9256",
+        "job": "docker-metadata",
+        "name": "qlsv-trancong-container-metadata-1",
+        "project": "qlsv-trancong",
+        "service": "container-metadata"
+      },
+      "value": [
+        1792130752.791,
+        "1"
+      ]
+    },
+    {
+      "metric": {
+        "__name__": "qlsv_container_info",
+        "container_id": "4ea6f9d7ff7f4bd3e02e18dc8c6453ad7d3e57d3e89a73cbe67fcbdc43318c21",
+        "instance": "container-metadata:9256",
+        "job": "docker-metadata",
+        "name": "qlsv-trancong-app-1",
+        "project": "qlsv-trancong",
+        "service": "app"
+      },
+      "value": [
+        1792130752.791,
+        "1"
+      ]
+    }
+  ]
+}

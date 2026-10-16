@@ -1,0 +1,44 @@
+[
+  {
+    "id": "all",
+    "title": "Toàn bộ log của hệ thống quản lý sinh viên",
+    "query": "{project=\"student-management\"}",
+    "type": "range"
+  },
+  {
+    "id": "health",
+    "title": "Nginx: request kiểm tra sức khỏe",
+    "query": "{project=\"student-management\", service=\"nginx\"} |= \"GET /health\"",
+    "type": "range"
+  },
+  {
+    "id": "count",
+    "title": "Tổng số dòng log trong 5 phút",
+    "query": "sum(count_over_time({project=\"student-management\"}[5m]))",
+    "type": "instant"
+  },
+  {
+    "id": "errors",
+    "title": "Nginx: HTTP 4xx/5xx",
+    "query": "{project=\"student-management\", service=\"nginx\"} |~ \"\\\" [45][0-9]{2} \"",
+    "type": "range"
+  },
+  {
+    "id": "app",
+    "title": "Log Express app",
+    "query": "{project=\"student-management\", service=\"app\"}",
+    "type": "range"
+  },
+  {
+    "id": "db",
+    "title": "Log MySQL (tên service Compose là db)",
+    "query": "{project=\"student-management\", service=\"db\"}",
+    "type": "range"
+  },
+  {
+    "id": "phpmyadmin",
+    "title": "Log truy cập phpMyAdmin",
+    "query": "{project=\"student-management\", service=\"phpmyadmin\"}",
+    "type": "range"
+  }
+]

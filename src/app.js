@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const validation = require('./validation');
 const createRepository = require('./repository');
 const { createMetrics } = require('./metrics');
+const { createRequestLogger } = require('./request-logging');
 
 const entities = {
   classes: { label: 'lớp học', validate: validation.validateClass, fields: ['code', 'name', 'school_year'], defaults: { school_year: '2026-2027' } },
@@ -20,6 +21,7 @@ function createApp(pool) {
   const app = express();
   const repo = createRepository(pool);
   const metrics = createMetrics();
+  app.use(createRequestLogger());
   app.use(metrics.middleware);
   app.disable('x-powered-by');
   app.set('view engine', 'ejs');

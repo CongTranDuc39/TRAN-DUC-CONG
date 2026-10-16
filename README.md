@@ -1,6 +1,6 @@
-# Hệ thống quản lý sinh viên — Giai đoạn 3
+# Hệ thống quản lý sinh viên — Giai đoạn 4
 
-Ứng dụng Express.js, EJS, MySQL và mysql2 với giao diện tiếng Việt, chạy bằng Docker Compose. Giai đoạn 3 bổ sung Prometheus, Grafana, cAdvisor và các exporter để giám sát hệ thống. Website tiếp tục đi qua Nginx, giữ toàn bộ CRUD và dữ liệu demo.
+Ứng dụng Express.js, EJS, MySQL và mysql2 với giao diện tiếng Việt, chạy bằng Docker Compose. Giai đoạn 4 bổ sung Loki, Promtail và LogQL để tra cứu log tập trung trong Grafana. Giữ hệ thống Prometheus/Grafana của giai đoạn 3, toàn bộ CRUD và dữ liệu demo; website tiếp tục đi qua Nginx.
 
 | Thông tin | Nội dung |
 | --- | --- |
@@ -17,6 +17,7 @@
 - Tìm kiếm, lọc, kiểm tra đầu vào; tính điểm môn và trung bình theo tín chỉ.
 - `/health` kiểm tra MySQL bằng `SELECT 1`.
 - Giám sát container, Express, MySQL và Nginx qua Prometheus/Grafana.
+- Thu log Express, Nginx, MySQL và phpMyAdmin qua Promtail/Loki; tra cứu bằng LogQL trong Grafana Explore.
 
 | Giao diện | Địa chỉ trên máy cá nhân |
 | --- | --- |
@@ -27,8 +28,9 @@
 | Prometheus Targets | <http://localhost:9091/targets> |
 | Grafana | <http://localhost:3001> |
 | Dashboard | <http://localhost:3001/d/student-management/student-management-monitoring> |
+| Grafana Explore — chọn datasource Loki | <http://localhost:3001/explore> |
 
-Các cổng trên chỉ bind `127.0.0.1`. Express, MySQL, cAdvisor và exporter không publish cổng ra host. Giai đoạn 3 chưa triển khai Loki hoặc Promtail.
+Các cổng trên chỉ bind `127.0.0.1`. Express, MySQL, cAdvisor, exporter, Loki và Promtail không publish cổng ra host. Loki phục vụ tại `http://loki:3100`, Promtail tại `http://promtail:9080` trong mạng Docker; Grafana truy cập Loki bằng tên service.
 
 ## Kiến trúc
 
@@ -42,9 +44,11 @@ Grafana :3001 → grafana:3000 → prometheus:9090 ← :9091
                                    ├─ container-metadata:9256/metrics → Docker socket
                                    ├─ mysql-exporter:9104/metrics → db:3306
                                    └─ nginx-exporter:9113/metrics → nginx:8080/stub_status
+Grafana Explore → loki:3100 ← promtail:9080 → Docker API socket (mount :ro)
+                              └─ chỉ log app/nginx/db/phpmyadmin của qlsv-trancong
 ```
 
-Prometheus scrape mỗi 15 giây, giữ dữ liệu 7 ngày trong `prometheus_data`. Grafana lưu tài khoản/cấu hình trong `grafana_data`. Volume `mysql_data`, schema và seed hiện có được giữ nguyên.
+Prometheus scrape mỗi 15 giây, giữ dữ liệu 7 ngày trong `prometheus_data`. Grafana lưu tài khoản/cấu hình trong `grafana_data`. Loki lưu chunks, index, WAL và trạng thái compactor trong named volume `loki_data`; Promtail lưu vị trí đọc trong `promtail_positions`. Volume `mysql_data`, schema và seed hiện có được giữ nguyên. Không đổi tên project Compose `qlsv-trancong` để tiếp tục dùng đúng các volume hiện tại.
 
 | Thành phần bổ sung | Image |
 | --- | --- |
@@ -53,6 +57,8 @@ Prometheus scrape mỗi 15 giây, giữ dữ liệu 7 ngày trong `prometheus_da
 | cAdvisor | `ghcr.io/google/cadvisor:0.55.1` |
 | MySQL exporter | `prom/mysqld-exporter:v0.20.0` |
 | Nginx exporter | `nginx/nginx-prometheus-exporter:1.4.1` |
+| Loki | `grafana/loki:3.7.8` |
+| Promtail | `grafana/promtail:3.5.8` |
 
 cAdvisor cần `privileged` và các mount chỉ đọc của Docker socket, containerd socket, rootfs, `/sys`, `/var/lib/docker` để thu thập CPU/RAM container. Trên Docker Desktop, đây là tài nguyên của máy ảo Linux chạy Docker. Cấu hình dùng containerd namespace `moby` để lấy được số liệu thực tế trong môi trường này. cAdvisor không có giao diện publish ra host.
 
@@ -72,7 +78,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -A
 
 Các action lần lượt chạy `docker compose config --quiet`, `docker compose up -d --build` và `docker compose ps`. Script dùng project `qlsv-trancong`, truyền rõ `--env-file .local/empty.env` là file rỗng để Compose không tự đọc `.env`. Script không đọc, sửa hoặc in `.env`; biến môi trường tiến trình được khôi phục khi kết thúc.
 
-Lần đầu cần tải image, build Express và đợi healthcheck. `mysql-exporter-init` là service chạy một lần, kết thúc với exit code 0 sau khi chuẩn bị user giám sát; trạng thái `Exited (0)` của service này là bình thường. Các service có healthcheck gồm MySQL, Express, Nginx, Prometheus và Grafana.
+Lần đầu cần tải image, build Express và đợi healthcheck. `mysql-exporter-init` là service chạy một lần, kết thúc với exit code 0 sau khi chuẩn bị user giám sát; trạng thái `Exited (0)` của service này là bình thường. Các service có healthcheck gồm MySQL, Express, Nginx, Prometheus và Grafana. Loki dùng image distroless không có shell/curl/wget để chạy Docker healthcheck; kiểm tra readiness HTTP `/ready` qua datasource proxy nội bộ của Grafana. Grafana/Promtail khởi chạy sau khi container Loki được tạo và client tự kết nối lại khi Loki sẵn sàng.
 
 ### Mật khẩu và đăng nhập
 
@@ -145,7 +151,46 @@ Website chỉ được publish qua `nginx:80` tại `127.0.0.1:8082`; Express ch
 | `Referrer-Policy` | `strict-origin-when-cross-origin` |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` |
 
-Proxy truyền `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`; ghi đè chuỗi XFF do client tự gửi tại proxy biên. Express tắt `trust proxy`. CSP dùng `frame-ancestors 'none'`, body tối đa `32k`, ẩn phiên bản Nginx. Access log JSON ra stdout, error log ra stderr, không ghi query string hay request body. Chưa triển khai HTTPS, đăng nhập/phân quyền ứng dụng hoặc thu thập log tập trung ở giai đoạn này.
+Proxy truyền `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`; ghi đè chuỗi XFF do client tự gửi tại proxy biên. Express tắt `trust proxy`. CSP dùng `frame-ancestors 'none'`, body tối đa `32k`, ẩn phiên bản Nginx. Access log dùng định dạng văn bản gồm method, URI đã bỏ query string, protocol và HTTP status ra stdout; error log ra stderr. Không ghi header hoặc request body trong access log. Chưa triển khai HTTPS hoặc đăng nhập/phân quyền ứng dụng.
+
+## Log tập trung và LogQL
+
+Datasource **Loki**, UID `loki`, URL nội bộ `http://loki:3100` được provision tự động, không chứa thông tin xác thực trong source và không cho sửa trên giao diện. Đăng nhập Grafana bằng action `GrafanaLogin`, mở **Explore**, chọn **Loki**, chuyển sang **Code**, chọn khoảng thời gian **Last 15 minutes** rồi chạy các truy vấn sau. Nếu MySQL chưa phát sinh log mới trong khoảng này, mở rộng thời gian về lúc container MySQL khởi động.
+
+```logql
+{project="student-management"}
+
+{project="student-management", service="nginx"} |= "GET /health"
+
+sum(count_over_time({project="student-management"}[5m]))
+
+{project="student-management", service="nginx"} |~ "\" [45][0-9]{2} "
+```
+
+Truy vấn thứ ba đếm số dòng log trong cửa sổ 5 phút, không phải số request duy nhất. Request xuất hiện trong cả log Nginx và Express được đếm ở cả hai stream. Có thể chọn truy vấn tức thời để xem tổng tại thời điểm hiện tại hoặc truy vấn theo khoảng thời gian để vẽ biểu đồ.
+
+Tạo một GET tới đường dẫn không tồn tại để demo HTTP 404; thao tác chỉ đọc và không gây lỗi 5xx:
+
+```powershell
+curl.exe --silent --show-error --output NUL --write-out 'HTTP %{http_code}' http://localhost:8082/__loki_probe_404
+curl.exe --fail --silent --show-error http://localhost:8082/health
+```
+
+Đợi khoảng 5–15 giây rồi chạy truy vấn lọc 4xx/5xx; sẽ thấy dòng request `GET /__loki_probe_404 HTTP/1.1` với status `404`. Các truy vấn được lưu trong `monitoring/logql/queries.json`; lọc Express bằng `{project="student-management", service="app"}`, MySQL bằng `{project="student-management", service="db"}`. Nhãn service giữ tên service Compose hiện có (`db` là MySQL).
+
+Promtail dùng Docker service discovery, lọc chính xác label `com.docker.compose.project=qlsv-trancong` ngay tại Docker API, sau đó giữ lại đúng project và whitelist `app|nginx|db|phpmyadmin` bằng relabel. Chỉ log các container này được đọc và gửi sang Loki; không có glob đọc log container khác. Nhãn `project="student-management"` là tên logic dùng cho LogQL, độc lập với tên project Compose hiện tại. Mỗi stream có thêm `service`, `container` (tên container không có dấu `/` đầu) và `stream` (`stdout`/`stderr`). Không chuyển environment hoặc toàn bộ metadata Docker thành label log.
+
+Express ghi log HTTP JSON với method, route chuẩn hóa, status và thời gian phản hồi; không ghi ID sinh viên, query, cookie, mật khẩu, header hoặc body. Nginx ghi access log văn bản để hỗ trợ trực tiếp các truy vấn trên. MySQL thu error/startup log hiện có qua stdout/stderr; không bật general query log hoặc ghi câu SQL. phpMyAdmin thu log Apache nếu có request. Promtail không thu log riêng của hệ giám sát để tránh vòng lặp tự thu thập.
+
+Loki dùng TSDB v13, filesystem và index chu kỳ `24h`. `limits_config.retention_period: 168h` giới hạn log 7 ngày; compactor bật retention, chạy mỗi 10 phút, dùng filesystem delete-request store và chờ 2 giờ trước khi xóa chunks đã đánh dấu. Xóa log diễn ra bất đồng bộ, không đúng tức thời tại mốc 7 ngày. `max_query_lookback: 168h` giới hạn khoảng dữ liệu có thể truy vấn. Named volume giữ log qua lần tạo lại container; không chạy `docker compose down -v` khi cần giữ dữ liệu.
+
+### Ngoại lệ hardening và giới hạn
+
+Promtail chạy bằng root để truy cập Docker socket trên Docker Desktop, mount `/var/run/docker.sock:ro`, dùng root filesystem chỉ đọc, bỏ toàn bộ capability và bật `no-new-privileges`. Chỉ volume vị trí đọc `/run/promtail` được ghi. Mount socket `:ro` không chặn Docker API dùng HTTP POST/DELETE hoặc các API có quyền thay đổi hệ thống; process có socket vẫn có quyền mạnh đối với Docker daemon. Đây là ngoại lệ hardening cho môi trường demo; khi triển khai dùng socket proxy cho phép đúng các API đọc cần thiết hoặc collector không cần socket. Bộ lọc project giới hạn log được thu, không phải cơ chế phân quyền của Docker daemon.
+
+Loki tắt authentication trong mạng Compose nội bộ và không publish cổng; chỉ dùng với stack local đáng tin cậy. Filesystem một node không cung cấp HA hoặc bản sao lưu; cần quản lý dung lượng đĩa và backup volume riêng. Readiness được xác minh khi nghiệm thu, chưa có healthcheck định kỳ của Docker cho Loki distroless.
+
+Promtail đã hết vòng đời hỗ trợ ngày **02/03/2026** theo [tài liệu Grafana](https://grafana.com/docs/loki/latest/send-data/promtail/). Giai đoạn này giữ Promtail đúng yêu cầu đề tài; nên chuyển collector sang Grafana Alloy ở giai đoạn tiếp theo trước khi dùng cho môi trường production. Retention được cấu hình và kiểm tra hiện tại; chưa thể khẳng định đã chờ đủ 7 ngày để quan sát xóa log. Cấu hình dựa trên [hướng dẫn retention](https://grafana.com/docs/loki/latest/operations/storage/retention/) và [filesystem storage](https://grafana.com/docs/loki/latest/operations/storage/filesystem/) chính thức.
 
 ## Kiểm tra thực tế
 
@@ -160,7 +205,10 @@ docker exec qlsv-trancong-nginx-1 nginx -t
 docker exec qlsv-trancong-prometheus-1 promtool check config /etc/prometheus/prometheus.yml
 npm run test:integration
 npm run test:proxy
+$env:MONITORING_EVIDENCE_DIR = 'docs/evidence/phase4/monitoring'
 npm run test:monitoring
+Remove-Item Env:\MONITORING_EVIDENCE_DIR
+npm run test:logs
 curl.exe --fail --silent --show-error http://localhost:8082/health
 curl.exe --fail --silent --show-error http://localhost:9091/-/ready
 curl.exe --fail --silent --show-error 'http://localhost:9091/api/v1/query?query=up'
@@ -169,9 +217,23 @@ curl.exe --silent --show-error --head http://localhost:8082/
 curl.exe --fail --silent --show-error --output NUL --write-out 'phpMyAdmin HTTP %{http_code}' http://localhost:5056/
 ```
 
-`npm run check` kiểm tra cú pháp JavaScript; `npm test` kiểm tra dữ liệu, tính điểm và instrumentation. Kiểm thử tích hợp chạy CRUD qua Nginx và dọn dữ liệu tạm; kiểm thử proxy kiểm tra header, CSP và các phản hồi HTTP. Kiểm thử monitoring kiểm tra targets, truy vấn, datasource/dashboard và dữ liệu thực tế; không đưa mật khẩu vào lệnh hoặc báo cáo. Chi tiết kết quả và minh chứng được ghi trong `KIEM_TRA.md`, `docs/evidence/phase3/`.
+`npm run check` kiểm tra cú pháp JavaScript; `npm test` kiểm tra dữ liệu, tính điểm, instrumentation và log HTTP an toàn. Kiểm thử tích hợp chạy CRUD qua Nginx và dọn dữ liệu tạm; kiểm thử proxy kiểm tra header, CSP và các phản hồi HTTP. Kiểm thử monitoring kiểm tra targets, truy vấn, datasource/dashboard và dữ liệu thực tế; kiểm thử logs kiểm tra Loki readiness qua Grafana, datasource Loki, bảy truy vấn LogQL, log từng service, GET 404 và tính cô lập theo project. Các script không đưa mật khẩu vào lệnh hoặc báo cáo. Chi tiết kết quả và minh chứng được ghi trong `KIEM_TRA.md`, `docs/evidence/phase3/`, `docs/evidence/phase4/`.
 
-Kết quả nghiệm thu ngày 16/10/2026: Compose build/up và cấu hình đạt; 10 service đang chạy, service init exit 0; 6 targets UP; 16/16 kiểm thử đơn vị, 9 nhóm CRUD, 6 kiểm tra proxy và 9 nhóm monitoring đạt. Dashboard có dữ liệu thật ở cả 17 panel với 21 truy vấn, CPU/RAM bao phủ đủ 10 service của dự án. Website, `/health`, phpMyAdmin và Grafana health đều HTTP 200.
+Lưu kiểm tra metrics giai đoạn 4 riêng để giữ minh chứng lịch sử giai đoạn 3:
+
+```powershell
+$env:MONITORING_EVIDENCE_DIR = 'docs/evidence/phase4/monitoring'
+npm run test:monitoring
+Remove-Item Env:\MONITORING_EVIDENCE_DIR
+npm run test:logs
+npm run capture:logs
+```
+
+`test:logs` lưu kết quả API vào `docs/evidence/phase4/` và chỉ tạo traffic GET an toàn, gồm request `GET /__loki_probe_404` trả 404. `capture:logs` đăng nhập Grafana bằng bí mật runtime trong bộ nhớ, chụp datasource Loki và bốn màn hình Explore (toàn bộ log, health, lỗi HTTP, số dòng); không lưu cookie hoặc mật khẩu vào minh chứng. Xem `docs/evidence/phase4/README.md` để đối chiếu ảnh và truy vấn. Vì Loki không publish ra host, không gọi `localhost:3100`; readiness được script kiểm tra tại `/api/datasources/proxy/uid/loki/ready` sau khi xác thực Grafana.
+
+Kết quả nghiệm thu giai đoạn 4 ngày 16/10/2026: cấu hình và 21 file JavaScript hợp lệ; 19/19 unit test, 9 nhóm CRUD, 6 kiểm tra proxy, 9 nhóm monitoring và 9 nhóm log đạt. Stack có 12 service đang chạy, 6 targets UP; dashboard giữ 17 panel/21 truy vấn có dữ liệu thực và CPU/RAM đủ 12 service. Loki readiness HTTP 200, datasource Loki `OK`, cả 7 truy vấn LogQL có dữ liệu thực của bốn service; GET `/__loki_probe_404` xuất hiện với HTTP 404 và health với HTTP 200. Năm ảnh Grafana cùng kết quả API và kiểm tra runtime lưu trong `docs/evidence/phase4/`; chi tiết ở `KIEM_TRA.md`.
+
+Kết quả nghiệm thu giai đoạn 3 ngày 16/10/2026 được giữ làm lịch sử: Compose build/up và cấu hình đạt; 10 service đang chạy, service init exit 0; 6 targets UP; 16/16 kiểm thử đơn vị, 9 nhóm CRUD, 6 kiểm tra proxy và 9 nhóm monitoring đạt. Dashboard có dữ liệu thật ở cả 17 panel với 21 truy vấn, CPU/RAM bao phủ đủ 10 service của dự án. Website, `/health`, phpMyAdmin và Grafana health đều HTTP 200.
 
 Có thể chụp lại minh chứng bằng Chrome/Edge trên máy sau khi stack sẵn sàng:
 
@@ -206,14 +268,14 @@ docker logs --tail=80 qlsv-trancong-nginx-1
 
 MySQL tự tính cột generated `total_score`. Trung bình tính theo các bản ghi trong phạm vi lọc; chưa chọn lần thi cao nhất hoặc xử lý học lại. Chưa có điểm được hiển thị là chưa có dữ liệu. Mốc đạt demo 5,0 không thay thế quy chế chính thức của trường.
 
-Khóa ngoại dùng `RESTRICT`: không xóa lớp còn sinh viên, sinh viên còn điểm hoặc môn còn điểm. Mã lớp/MSSV/mã môn và email nếu có phải duy nhất. Điểm trong 0–10; tín chỉ trong 1–10; bộ sinh viên/môn/học kỳ/năm học không trùng. Seed chỉ chạy khi volume MySQL trống; giai đoạn 3 không khởi tạo lại seed.
+Khóa ngoại dùng `RESTRICT`: không xóa lớp còn sinh viên, sinh viên còn điểm hoặc môn còn điểm. Mã lớp/MSSV/mã môn và email nếu có phải duy nhất. Điểm trong 0–10; tín chỉ trong 1–10; bộ sinh viên/môn/học kỳ/năm học không trùng. Seed chỉ chạy khi volume MySQL trống; nâng giai đoạn không khởi tạo lại seed.
 
 ## Dừng và chạy lại
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Stop
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Start
-# Gỡ container/mạng, giữ cả ba volume dữ liệu:
+# Gỡ container/mạng, giữ các named volume dữ liệu và vị trí đọc log:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Down
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -Action Up
 ```
@@ -227,6 +289,9 @@ docker-compose.yml             Website, database và toàn bộ monitoring
 Dockerfile                     Node.js 24 Alpine, chạy bằng user node
 nginx/default.conf             Proxy, security headers, status nội bộ, log
 monitoring/prometheus/         Cấu hình scrape 6 targets
+monitoring/loki/loki.yml        TSDB/filesystem, WAL, retention 7 ngày
+monitoring/promtail/promtail.yml Docker discovery và label log đúng project
+monitoring/logql/queries.json    Các truy vấn LogQL dùng để demo/kiểm tra
 monitoring/grafana/provisioning/ Datasource và dashboard provider
 monitoring/grafana/dashboards/  Student Management Monitoring
 src/metrics.js                 Metrics HTTP và tài nguyên Node.js
@@ -242,4 +307,5 @@ README.md                      Hướng dẫn chạy
 PROGRESS.md                    Tiến độ các giai đoạn
 KIEM_TRA.md                     Báo cáo kiểm tra thực tế
 docs/evidence/phase3/           Minh chứng giai đoạn 3, không chứa bí mật
+docs/evidence/phase4/           Minh chứng Loki, Grafana Explore và LogQL
 ```
