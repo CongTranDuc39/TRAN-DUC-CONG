@@ -1,0 +1,13 @@
+NAME                                 IMAGE                                   COMMAND                  SERVICE              CREATED          STATUS                    PORTS
+qlsv-trancong-app-1                  qlsv-trancong-app                       "docker-entrypoint.s…"   app                  58 seconds ago   Up 55 seconds (healthy)   3000/tcp
+qlsv-trancong-cadvisor-1             ghcr.io/google/cadvisor:0.55.1          "/usr/bin/cadvisor -…"   cadvisor             7 minutes ago    Up 7 minutes (healthy)    8080/tcp
+qlsv-trancong-container-metadata-1   qlsv-trancong-app                       "docker-entrypoint.s…"   container-metadata   59 seconds ago   Up 57 seconds (healthy)   3000/tcp
+qlsv-trancong-db-1                   mysql:8.4                               "docker-entrypoint.s…"   db                   7 minutes ago    Up 7 minutes (healthy)    3306/tcp, 33060/tcp
+qlsv-trancong-grafana-1              grafana/grafana:13.2.3                  "/run.sh"                grafana              7 minutes ago    Up 6 minutes (healthy)    127.0.0.1:3001->3000/tcp
+qlsv-trancong-loki-1                 grafana/loki:3.7.8                      "/usr/bin/loki -conf…"   loki                 5 hours ago      Up 5 hours                3100/tcp
+qlsv-trancong-mysql-exporter-1       prom/mysqld-exporter:v0.20.0            "/bin/mysqld_exporte…"   mysql-exporter       7 minutes ago    Up 7 minutes              9104/tcp
+qlsv-trancong-nginx-1                nginx:stable-alpine                     "/docker-entrypoint.…"   nginx                7 minutes ago    Up 7 minutes (healthy)    127.0.0.1:8082->80/tcp
+qlsv-trancong-nginx-exporter-1       nginx/nginx-prometheus-exporter:1.4.1   "/usr/bin/nginx-prom…"   nginx-exporter       7 minutes ago    Up 7 minutes
+qlsv-trancong-phpmyadmin-1           phpmyadmin:5.2-apache                   "/docker-entrypoint.…"   phpmyadmin           59 seconds ago   Up 56 seconds (healthy)   127.0.0.1:5056->80/tcp
+qlsv-trancong-prometheus-1           prom/prometheus:v3.15.0                 "/bin/prometheus --c…"   prometheus           7 minutes ago    Up 7 minutes (healthy)    127.0.0.1:9091->9090/tcp
+qlsv-trancong-promtail-1             grafana/promtail:3.5.8                  "/usr/bin/promtail -…"   promtail             5 hours ago      Up 5 hours

@@ -1,0 +1,20 @@
+{
+  "datasource": {
+    "uid": "prometheus",
+    "name": "Prometheus",
+    "type": "prometheus",
+    "url": "http://prometheus:9090",
+    "isDefault": true,
+    "readOnly": true
+  },
+  "health": {
+    "details": {
+      "application": "Prometheus",
+      "features": {
+        "rulerApiEnabled": false
+      }
+    },
+    "message": "Successfully queried the Prometheus API.",
+    "status": "OK"
+  }
+}

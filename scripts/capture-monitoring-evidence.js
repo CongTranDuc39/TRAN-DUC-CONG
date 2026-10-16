@@ -8,7 +8,7 @@ const { once } = require('node:events');
 const { setTimeout: delay } = require('node:timers/promises');
 
 const root = path.resolve(__dirname, '..');
-const evidence = path.join(root, 'docs', 'evidence', 'phase3');
+const evidence = path.resolve(root, process.env.MONITORING_EVIDENCE_DIR || 'docs/evidence/phase3');
 const browserPaths = [process.env.CHROME_PATH,
   'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
   'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
@@ -73,7 +73,7 @@ async function main() {
       await delay(1000);
       const result = await send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: false }, sessionId);
       fs.writeFileSync(path.join(evidence, filename), Buffer.from(result.data, 'base64'));
-      console.log(`Saved docs/evidence/phase3/${filename}`);
+      console.log(`Saved ${path.relative(root, path.join(evidence, filename)).split(path.sep).join('/')}`);
     };
     await send('Emulation.setDeviceMetricsOverride', { width: 1680, height: 1180, deviceScaleFactor: 1, mobile: false }, sessionId);
     await send('Page.navigate', { url: 'http://localhost:9091/targets' }, sessionId);

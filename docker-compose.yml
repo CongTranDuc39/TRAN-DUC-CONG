@@ -2,6 +2,21 @@ services:
   db:
     image: mysql:8.4
     restart: unless-stopped
+    # The official entrypoint starts as root to fix volume ownership, then
+    # execs mysqld as mysql. Keep only the capabilities needed for that handoff.
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m,mode=1777
+      - /var/run/mysqld:rw,noexec,nosuid,nodev,size=4m,uid=999,gid=999,mode=0775
     environment:
       MYSQL_DATABASE: ${DB_NAME:-qlsv}
       MYSQL_USER: ${DB_USER:-qlsv_app}
@@ -21,6 +36,14 @@ services:
   app:
     build: .
     restart: unless-stopped
+    user: "node:node"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777
     environment:
       NODE_ENV: production
       PORT: "3000"
@@ -34,6 +57,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      app-permissions-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health', {signal: AbortSignal.timeout(3500)}).then(r => {if (!r.ok) process.exit(1)}).catch(() => process.exit(1))"]
       interval: 15s
@@ -44,6 +69,21 @@ services:
   nginx:
     image: nginx:stable-alpine
     restart: unless-stopped
+    # The master binds port 80 and switches workers to the nginx user.
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /var/cache/nginx:rw,noexec,nosuid,nodev,size=32m,mode=0755
+      - /run:rw,noexec,nosuid,nodev,size=4m,mode=0755
+      - /tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777
     ports:
       - "127.0.0.1:8082:80"
     expose:
@@ -63,6 +103,23 @@ services:
   phpmyadmin:
     image: phpmyadmin:5.2-apache
     restart: unless-stopped
+    # The upstream entrypoint generates /etc/phpmyadmin/config.secret.inc.php.
+    # Keep its rootfs writable rather than hide the shipped configuration.
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=32m,mode=1777
+      - /var/run/apache2:rw,noexec,nosuid,nodev,size=4m,uid=33,gid=33,mode=0775
+      - /var/lock/apache2:rw,noexec,nosuid,nodev,size=4m,uid=33,gid=33,mode=0775
+      - /var/www/html/tmp:rw,noexec,nosuid,nodev,size=32m,uid=33,gid=33,mode=0770
     environment:
       PMA_HOST: db
       PMA_PORT: "3306"
@@ -72,12 +129,47 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      # This image disables allow_url_fopen; use its cURL extension instead.
+      test: ["CMD", "php", "-r", "$$probe = curl_init('http://127.0.0.1/'); curl_setopt_array($$probe, [CURLOPT_NOBODY => true, CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 4]); $$response = curl_exec($$probe); $$status = curl_getinfo($$probe, CURLINFO_HTTP_CODE); curl_close($$probe); exit($$response === false || $$status !== 200 ? 1 : 0);"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  app-permissions-init:
+    image: qlsv-trancong-app
+    build: .
+    restart: "no"
+    command: ["node", "scripts/bootstrap-app-permissions.js"]
+    user: "node:node"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: ${DB_NAME:-qlsv}
+      DB_USER: ${DB_USER:-qlsv_app}
+    secrets:
+      - mysql_root_password
+    depends_on:
+      db:
+        condition: service_healthy
 
   mysql-exporter-init:
     image: qlsv-trancong-app
     build: .
     restart: "no"
     command: ["node", "scripts/bootstrap-monitoring.js"]
+    user: "node:node"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     environment:
       DB_HOST: db
       DB_PORT: "3306"
@@ -92,6 +184,11 @@ services:
   mysql-exporter:
     image: prom/mysqld-exporter:v0.20.0
     restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     command: ["--config.my-cnf=/run/secrets/mysql_exporter_client"]
     secrets:
       - mysql_exporter_client
@@ -102,6 +199,11 @@ services:
   nginx-exporter:
     image: nginx/nginx-prometheus-exporter:1.4.1
     restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     command: ["--nginx.scrape-uri=http://nginx:8080/stub_status"]
     depends_on:
       nginx:
@@ -111,6 +213,12 @@ services:
     image: ghcr.io/google/cadvisor:0.55.1
     restart: unless-stopped
     privileged: true
+    # Exception: Docker Desktop container/cgroup metrics require privileged.
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777
     command:
       - --docker_only=true
       - --store_container_labels=false
@@ -143,10 +251,23 @@ services:
       - no-new-privileges:true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:9256/health', {signal: AbortSignal.timeout(3500)}).then(r => {if (!r.ok) process.exit(1)}).catch(() => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   prometheus:
     image: prom/prometheus:v3.15.0
     restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
@@ -210,11 +331,19 @@ services:
   grafana:
     image: grafana/grafana:13.2.3
     restart: unless-stopped
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=64m,mode=1777
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_LOG_MODE: console
       GF_SERVER_ROOT_URL: http://localhost:3001
       GF_ANALYTICS_REPORTING_ENABLED: "false"
       GF_ANALYTICS_CHECK_FOR_UPDATES: "false"

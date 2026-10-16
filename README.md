@@ -1,6 +1,8 @@
-# Hệ thống quản lý sinh viên — Giai đoạn 4
+# Hệ thống quản lý sinh viên — Giai đoạn 5
 
-Ứng dụng Express.js, EJS, MySQL và mysql2 với giao diện tiếng Việt, chạy bằng Docker Compose. Giai đoạn 4 bổ sung Loki, Promtail và LogQL để tra cứu log tập trung trong Grafana. Giữ hệ thống Prometheus/Grafana của giai đoạn 3, toàn bộ CRUD và dữ liệu demo; website tiếp tục đi qua Nginx.
+Ứng dụng Express.js, EJS, MySQL và mysql2 với giao diện tiếng Việt, chạy bằng Docker Compose. Giai đoạn 5 kiểm tra và hoàn thiện hardening, kiểm thử tổng thể, minh chứng và báo cáo; giữ toàn bộ CRUD, dữ liệu demo và kiến trúc Nginx/Prometheus/Grafana/Loki/Promtail của các giai đoạn trước.
+
+Báo cáo đề tài: [BAO_CAO.md](BAO_CAO.md). Kết quả nghiệm thu: [KIEM_TRA.md](KIEM_TRA.md). Minh chứng giai đoạn 5: [docs/evidence/phase5/README.md](docs/evidence/phase5/README.md). Đợt kiểm thử tổng thể đã đạt 15/15 bước; lịch sử nghiệm thu giai đoạn 1–4 được giữ nguyên bên dưới.
 
 | Thông tin | Nội dung |
 | --- | --- |
@@ -78,7 +80,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\local-stack.ps1 -A
 
 Các action lần lượt chạy `docker compose config --quiet`, `docker compose up -d --build` và `docker compose ps`. Script dùng project `qlsv-trancong`, truyền rõ `--env-file .local/empty.env` là file rỗng để Compose không tự đọc `.env`. Script không đọc, sửa hoặc in `.env`; biến môi trường tiến trình được khôi phục khi kết thúc.
 
-Lần đầu cần tải image, build Express và đợi healthcheck. `mysql-exporter-init` là service chạy một lần, kết thúc với exit code 0 sau khi chuẩn bị user giám sát; trạng thái `Exited (0)` của service này là bình thường. Các service có healthcheck gồm MySQL, Express, Nginx, Prometheus và Grafana. Loki dùng image distroless không có shell/curl/wget để chạy Docker healthcheck; kiểm tra readiness HTTP `/ready` qua datasource proxy nội bộ của Grafana. Grafana/Promtail khởi chạy sau khi container Loki được tạo và client tự kết nối lại khi Loki sẵn sàng.
+Lần đầu cần tải image, build Express và đợi healthcheck. `app-permissions-init` và `mysql-exporter-init` chạy một lần để chuẩn bị quyền user ứng dụng/giám sát; trạng thái `Exited (0)` của hai service này là bình thường. Compose khai báo healthcheck cho MySQL, Express, Nginx, phpMyAdmin, helper metadata, Prometheus và Grafana; cAdvisor kế thừa healthcheck từ image, tổng cộng 8 service healthy trong nghiệm thu. Loki dùng image distroless không có shell/curl/wget để chạy Docker healthcheck; kiểm tra readiness HTTP `/ready` qua datasource proxy nội bộ của Grafana. Grafana/Promtail khởi chạy sau khi container Loki được tạo và client tự kết nối lại khi Loki sẵn sàng.
 
 ### Mật khẩu và đăng nhập
 
@@ -88,7 +90,7 @@ Script giữ nguyên thông tin MySQL hiện có trong `.local/credentials.xml`;
 
 | File runtime | Mục đích |
 | --- | --- |
-| `.local/secrets/mysql-root-password.txt` | Chỉ service khởi tạo exporter dùng để quản lý tài khoản |
+| `.local/secrets/mysql-root-password.txt` | Hai service khởi tạo dùng để quản lý quyền/tài khoản; không mount vào app |
 | `.local/secrets/mysql-exporter-password.txt` | Mật khẩu user `qlsv_exporter` cho service khởi tạo |
 | `.local/secrets/mysql-exporter.cnf` | Cấu hình đăng nhập Docker secret của MySQL exporter |
 | `.local/secrets/grafana-admin-password.txt` | Docker secret mật khẩu quản trị Grafana |
@@ -194,6 +196,24 @@ Promtail đã hết vòng đời hỗ trợ ngày **02/03/2026** theo [tài li�
 
 ## Kiểm tra thực tế
 
+Khi tái kiểm tra giai đoạn 5, ghi minh chứng mới vào thư mục tương ứng để giữ lịch sử các giai đoạn trước:
+
+```powershell
+$env:MONITORING_EVIDENCE_DIR = 'docs/evidence/phase5/monitoring'
+npm run test:monitoring
+node scripts/capture-monitoring-evidence.js
+Remove-Item Env:\MONITORING_EVIDENCE_DIR
+$env:LOGGING_EVIDENCE_DIR = 'docs/evidence/phase5/logging'
+$env:LOGGING_EVIDENCE_PHASE = '5'
+npm run test:logs
+npm run capture:logs
+Remove-Item Env:\LOGGING_EVIDENCE_DIR
+Remove-Item Env:\LOGGING_EVIDENCE_PHASE
+node scripts/capture-final-evidence.js
+```
+
+Ảnh website/health mới nằm trong `docs/evidence/phase5/website/`. Chỉ dùng `CAPTURE_GITHUB_HISTORY=1` khi muốn thêm ảnh lịch sử commit công khai; script không đăng nhập GitHub hoặc lưu credential. Các lệnh kiểm thử nền dưới đây vẫn áp dụng; đường dẫn phase4 trong ví dụ lịch sử cần được đổi sang phase5 khi nghiệm thu mới.
+
 ```powershell
 npm ci
 npm run check
@@ -230,6 +250,37 @@ npm run capture:logs
 ```
 
 `test:logs` lưu kết quả API vào `docs/evidence/phase4/` và chỉ tạo traffic GET an toàn, gồm request `GET /__loki_probe_404` trả 404. `capture:logs` đăng nhập Grafana bằng bí mật runtime trong bộ nhớ, chụp datasource Loki và bốn màn hình Explore (toàn bộ log, health, lỗi HTTP, số dòng); không lưu cookie hoặc mật khẩu vào minh chứng. Xem `docs/evidence/phase4/README.md` để đối chiếu ảnh và truy vấn. Vì Loki không publish ra host, không gọi `localhost:3100`; readiness được script kiểm tra tại `/api/datasources/proxy/uid/loki/ready` sau khi xác thực Grafana.
+
+## Hardening và nghiệm thu giai đoạn 5
+
+Web chạy rõ `node:node`, `read_only`, `cap_drop: ALL`, `no-new-privileges:true`; `/tmp` là tmpfs `noexec,nosuid,nodev`. Hai service khởi tạo user MySQL cũng chạy `node:node`, filesystem chỉ đọc và không capability. Các exporter, Prometheus, Grafana, Loki, Promtail và helper metadata có root filesystem chỉ đọc, bỏ capability và cấm nâng quyền; dữ liệu chỉ ghi vào named volume hoặc thư mục tạm được khai báo.
+
+`app-permissions-init` chạy `scripts/bootstrap-app-permissions.js` sau khi MySQL healthy, trước app. Script dùng root Docker secret để bỏ quyền hiện có của tài khoản ứng dụng và cấp lại đúng `SELECT`, `INSERT`, `UPDATE`, `DELETE` trên từng bảng `classes`, `students`, `subjects`, `scores`. Không cấp `GRANT OPTION`, DDL hay quyền server; không đổi mật khẩu, schema, dữ liệu hoặc seed. Tài khoản exporter tách riêng theo nhu cầu metrics; không dùng root để chạy CRUD. phpMyAdmin đăng nhập bằng user ứng dụng cũng chịu giới hạn này.
+
+| Service/nhóm | Chính sách và ngoại lệ |
+| --- | --- |
+| MySQL | Rootfs chỉ đọc; data/socket/tmp nằm ở volume/tmpfs. Entrypoint bắt đầu root để chuẩn bị ownership rồi chuyển `mysqld` sang `mysql`; giữ `CHOWN`, `DAC_OVERRIDE`, `SETUID`, `SETGID` |
+| Nginx | Rootfs chỉ đọc, cache/run/tmp dùng tmpfs; root master bind port 80 rồi chạy worker `nginx`; giữ `CHOWN`, `SETUID`, `SETGID`, `NET_BIND_SERVICE` |
+| phpMyAdmin | Giữ rootfs ghi được vì entrypoint tạo `/etc/phpmyadmin/config.secret.inc.php`; Apache cần nhóm capability giới hạn và tmpfs runtime/session, có healthcheck HTTP |
+| cAdvisor | Giữ `privileged` do Docker Desktop/containerd; rootfs và host mounts chỉ đọc, `no-new-privileges`; không tuyên bố capability đã bị giới hạn khi privileged |
+| Promtail/metadata | Socket mount `:ro`; Promtail root, metadata dùng supplementary group 0. Socket vẫn có quyền mạnh đối với Docker daemon |
+| Grafana | Rootfs chỉ đọc, data volume ghi được; `/tmp` có `nosuid,nodev`, giữ quyền thực thi để không cản helper/plugin runtime |
+
+Tất cả 14 container có `no-new-privileges`, 13 rootfs chỉ đọc (ngoại lệ phpMyAdmin), 13 khai báo `cap_drop: ALL` (ngoại lệ cAdvisor privileged). MySQL/Nginx/phpMyAdmin chỉ thêm lại capability cần cho image chính thức. Healthcheck mới cho phpMyAdmin và helper metadata bổ sung các check hiện có; runtime có 8 service healthy, gồm cAdvisor kế thừa image. Loki distroless vẫn kiểm tra `/ready` qua API; không giả lập healthcheck Docker thiếu công cụ HTTP.
+
+Chạy quy trình kiểm thử tổng thể bằng:
+
+```powershell
+npm run test:final
+# Gồm 15 bước; thêm ba bước chụp ảnh sau khi test đạt:
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify-final.ps1 -Capture
+```
+
+Runner yêu cầu `docs/evidence/phase5/baseline-data.json` đã chụp trước thay đổi; không tự dựng lại baseline từ dữ liệu sau kiểm thử. Nó lưu transcript từng bước, kết quả hardening và API vào `docs/evidence/phase5/`, tự đặt/khôi phục các biến đường dẫn minh chứng và mốc bắt đầu kiểm tra sau startup. Có thể dùng `-SkipBuild` để tái kiểm tra stack vừa build, nhưng không thay cho bước build nghiệm thu ban đầu. `npm run test:hardening` độc lập cần `FINAL_VERIFY_STARTED_AT` đánh dấu đúng cửa sổ kiểm tra, nên ưu tiên dùng runner.
+
+Baseline đang lưu gắn với database tại mốc trước giai đoạn 5, gồm cả timestamp trong hàng. Database mới tạo hoặc dữ liệu đã được người dùng sửa hợp lệ có thể không khớp hash; đó không tự động là bằng chứng mất dữ liệu. Không ghi đè baseline lịch sử để ép test đạt. Với database khác, chạy các nhóm chức năng riêng và chuẩn bị một đợt kiểm chứng/baseline độc lập trước thay đổi; phép so baseline của `test:final` hiện tại dành cho trạng thái database đã nghiệm thu này.
+
+Kết quả giai đoạn 5 ngày 16/10/2026: 15/15 bước đạt, gồm 24 file JavaScript, 19/19 unit test, 9 nhóm CRUD, 6 kiểm tra proxy, 9 nhóm monitoring, 9 nhóm log và 7 nhóm hardening. Prometheus 6/6 targets UP; dashboard 17 panel/21 truy vấn có dữ liệu thật, CPU/RAM đủ 12 service. Loki `/ready` 200, datasource OK, log thật bốn service; 404 an toàn và count dương được xác nhận. Nội dung bốn bảng giữ nguyên SHA-256 với baseline: 8 sinh viên, 3 lớp, 4 môn, 12 điểm. Đã lưu và mở xem 15 ảnh; kiểm tra hardening sau chụp vẫn đạt. Log Nginx không có HTTP 5xx trong cửa sổ sau startup `08:00:42.7451994Z`–`08:04:40.703Z`; đây là kết quả có giới hạn thời gian, không bảo đảm không có lỗi ngoài đợt kiểm tra.
 
 Kết quả nghiệm thu giai đoạn 4 ngày 16/10/2026: cấu hình và 21 file JavaScript hợp lệ; 19/19 unit test, 9 nhóm CRUD, 6 kiểm tra proxy, 9 nhóm monitoring và 9 nhóm log đạt. Stack có 12 service đang chạy, 6 targets UP; dashboard giữ 17 panel/21 truy vấn có dữ liệu thực và CPU/RAM đủ 12 service. Loki readiness HTTP 200, datasource Loki `OK`, cả 7 truy vấn LogQL có dữ liệu thực của bốn service; GET `/__loki_probe_404` xuất hiện với HTTP 404 và health với HTTP 200. Năm ảnh Grafana cùng kết quả API và kiểm tra runtime lưu trong `docs/evidence/phase4/`; chi tiết ở `KIEM_TRA.md`.
 
@@ -296,6 +347,10 @@ monitoring/grafana/provisioning/ Datasource và dashboard provider
 monitoring/grafana/dashboards/  Student Management Monitoring
 src/metrics.js                 Metrics HTTP và tài nguyên Node.js
 scripts/bootstrap-monitoring.js Khởi tạo user exporter trên volume hiện có
+scripts/bootstrap-app-permissions.js Giới hạn user ứng dụng còn CRUD bốn bảng
+scripts/hardening-test.js       Kiểm tra runtime, quyền DB, dữ liệu và cửa sổ không 5xx
+scripts/verify-final.ps1        Điều phối nghiệm thu giai đoạn 5, lưu transcript/API
+scripts/capture-final-evidence.js Chụp website CRUD/health và lịch sử GitHub nếu yêu cầu
 scripts/container-metadata.js  Ánh xạ container ID/service của riêng project
 scripts/capture-monitoring-evidence.js Chụp Targets và hai nhóm dashboard
 scripts/local-stack.ps1        Chạy stack, DPAPI và Docker secret runtime
@@ -306,6 +361,8 @@ database/init.sql              Schema, ràng buộc và seed
 README.md                      Hướng dẫn chạy
 PROGRESS.md                    Tiến độ các giai đoạn
 KIEM_TRA.md                     Báo cáo kiểm tra thực tế
+BAO_CAO.md                      Báo cáo đề tài đầy đủ, kiến trúc và giới hạn
 docs/evidence/phase3/           Minh chứng giai đoạn 3, không chứa bí mật
 docs/evidence/phase4/           Minh chứng Loki, Grafana Explore và LogQL
+docs/evidence/phase5/           Hardening, kiểm thử tổng thể và minh chứng mới
 ```

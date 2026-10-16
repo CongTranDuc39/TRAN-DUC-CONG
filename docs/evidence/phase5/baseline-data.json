@@ -1,0 +1,21 @@
+{
+  "collectedAt": "2026-10-16T07:51:24.599Z",
+  "tables": {
+    "classes": {
+      "rows": 3,
+      "sha256": "cb2acf0c6cc5aeb2cd5993eaf0a52e0631a17dcce0ca56f7f6c09c5c8ba3b6b4"
+    },
+    "students": {
+      "rows": 8,
+      "sha256": "4a0a24481070b33bb2cd4a25f83a5180b96c8e5dffd41c0ee94b09b6b796f3ac"
+    },
+    "subjects": {
+      "rows": 4,
+      "sha256": "5fead437d11f1c5a69fd9188c88f8c7738bfdfe92b981a80af47cc20c23e5790"
+    },
+    "scores": {
+      "rows": 12,
+      "sha256": "6cab335ac0ae715e943e1e3e8b6a59a47ca12f2a7cffac3436c396de0d111a4c"
+    }
+  }
+}

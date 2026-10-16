@@ -1,0 +1,33 @@
+
+> qlsv-trancong@1.0.0 test
+> node --test tests/*.test.js
+
+✔ Container identity contains only running valid containers from the chosen Compose project (5.46ms)
+✔ Each scrape rebuilds current identities and drops removed containers without caching stale labels (156.3312ms)
+✔ Docker failure produces 503 instead of stale info and never exposes underlying API errors (35.0716ms)
+✔ HTTP metrics count completed responses, errors and durations without student IDs or search data (156.1715ms)
+✔ Static and unknown-method requests use bounded labels (5.6966ms)
+{"time":"2026-10-16T08:00:45.804Z","service":"app","method":"GET","route":"/health","status":200,"duration_ms":1.364}
+{"time":"2026-10-16T08:00:45.824Z","service":"app","method":"POST","route":"__unmatched__","status":403,"duration_ms":17.756}
+✔ App registries remain independent and instrument health plus CSRF middleware responses (69.1806ms)
+✔ Request logs contain completed HTTP status and duration without student data or credentials (192.2147ms)
+✔ Static and unknown requests have bounded routes; metrics scrapes do not generate logs (0.7555ms)
+✔ Unavailable log sink does not throw after the response finishes (0.8809ms)
+✔ Lớp: chuẩn hóa mã và khoảng trắng, chấp nhận niên khóa đại học nhiều năm (4.6909ms)
+✔ Lớp: bắt buộc dữ liệu, giới hạn độ dài, mã và niên khóa hợp lệ (1.8549ms)
+✔ Sinh viên: chuẩn hóa mã, tên và cho phép bỏ thông tin tùy chọn (1.1013ms)
+✔ Sinh viên: từ chối ngày không tồn tại, ngày tương lai và ngày không đúng định dạng (39.9092ms)
+✔ Sinh viên: ràng buộc email, số điện thoại, giới tính và ID lớp (4.6694ms)
+✔ Sinh viên: từ chối mã và tên không hợp lệ, địa chỉ quá dài (3.0934ms)
+✔ Môn học: chuẩn hóa mã, số tín chỉ nguyên từ 1 đến 10 (1.1345ms)
+✔ Điểm: kiểm tra ID, học kỳ, năm học và tất cả thành phần điểm (1.5043ms)
+✔ Điểm tổng kết: tỷ trọng chuyên cần 10%, giữa kỳ 30%, cuối kỳ 60%, làm tròn 2 chữ số (0.5357ms)
+✔ Điểm trung bình: có trọng số tín chỉ và xử lý danh sách trống (0.6602ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 912.0879

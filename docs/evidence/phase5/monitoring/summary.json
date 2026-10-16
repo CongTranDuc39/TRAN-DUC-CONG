@@ -1,0 +1,23 @@
+{
+  "phase": 5,
+  "passed": true,
+  "startedAt": "2026-10-16T08:00:50.460Z",
+  "completedAt": "2026-10-16T08:01:21.733Z",
+  "checks": [
+    "Nginx blocks internal metrics/status endpoints, including slash and case variants",
+    "Website, /health and all four CRUD list pages return HTTP 200 through Nginx",
+    "All six Prometheus targets are UP with fresh scrapes",
+    "Prometheus query up returns 1 for every target",
+    "Grafana /api/health database is ok",
+    "Grafana provisioned default Prometheus datasource is read-only and healthy",
+    "Student Management Monitoring dashboard is provisioned with 17 panels",
+    "All 21 dashboard queries return fresh finite measurements through Grafana",
+    "CPU/RAM cover all 12 current services using actual cAdvisor samples joined with Docker metadata; HTTP status/error, MySQL and Nginx panels contain real data"
+  ],
+  "targetCount": 6,
+  "containerServiceCount": 12,
+  "dashboardTitle": "Student Management Monitoring",
+  "dashboardPanelCount": 17,
+  "dashboardQueryCount": 21,
+  "evidenceNote": "Only measured metrics and sanitized health metadata are saved. No credentials, request headers, cookies or .env content are included."
+}

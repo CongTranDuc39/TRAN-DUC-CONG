@@ -11,7 +11,7 @@ const phpMyAdminUrl = process.env.TEST_PHPMYADMIN_URL || 'http://localhost:5056'
 const grafanaUrl = process.env.TEST_GRAFANA_URL || 'http://localhost:3001';
 const prometheusUrl = process.env.TEST_PROMETHEUS_URL || 'http://localhost:9091';
 const composeProject = process.env.TEST_COMPOSE_PROJECT || 'qlsv-trancong';
-const evidenceDir = path.join(projectRoot, 'docs', 'evidence', 'phase4');
+const evidenceDir = path.resolve(projectRoot, process.env.LOGGING_EVIDENCE_DIR || 'docs/evidence/phase4');
 const datasourcePrefix = '/api/datasources/proxy/uid/loki';
 const allowedServices = ['app', 'db', 'nginx', 'phpmyadmin'];
 const expectedJobs = ['cadvisor', 'docker-metadata', 'express', 'mysql', 'nginx', 'prometheus'];
@@ -237,7 +237,7 @@ async function main() {
   check('Website /health remains HTTP 200 after all logging checks');
 
   const summary = {
-    phase: 4,
+    phase: Number(process.env.LOGGING_EVIDENCE_PHASE || 4),
     passed: true,
     startedAt: startedAt.toISOString(),
     completedAt: new Date().toISOString(),
@@ -265,7 +265,7 @@ async function main() {
   for (const [filename, payload] of Object.entries(files)) {
     await fs.writeFile(path.join(evidenceDir, filename), JSON.stringify(sanitizeEvidence(payload), null, 2) + '\n', 'utf8');
   }
-  console.log('PASS logging: ' + checks.length + ' verification groups. Evidence: docs/evidence/phase4/');
+  console.log('PASS logging: ' + checks.length + ' verification groups. Evidence: ' + path.relative(projectRoot, evidenceDir).split(path.sep).join('/') + '/');
 }
 
 main().catch((error) => {

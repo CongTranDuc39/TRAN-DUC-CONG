@@ -1,4 +1,65 @@
-# Báo cáo triển khai và kiểm tra — Giai đoạn 4
+# Báo cáo triển khai và kiểm tra — Giai đoạn 5
+
+Ngày: 16/10/2026 — Asia/Saigon. Đề tài **Hệ thống quản lý sinh viên**. Sinh viên **Trần Đức Công**, MSSV **DTC245200418**, lớp **CNTT K23I**, **Đại học Công nghệ Thông tin và Truyền thông**. Giảng viên **Lê Khánh Dương**.
+
+## Phạm vi giai đoạn 5
+
+Tiếp tục từ `7690551` trên nhánh `master`, không dựng lại đề tài. Rà soát và bổ sung hardening phù hợp từng container, giới hạn quyền MySQL ứng dụng, chạy lại kiểm thử toàn hệ thống, lưu minh chứng mới và hoàn thiện [BAO_CAO.md](BAO_CAO.md). Giữ toàn bộ commit, named volume, dữ liệu và chức năng CRUD; bốn URL không đổi. Không đọc, in, sửa hoặc commit `.env`; Compose tiếp tục qua `scripts/local-stack.ps1` với `--env-file .local/empty.env`.
+
+Không dùng reset/checkout để hủy thay đổi, force push, `down -v` hoặc xóa volume; chỉ thao tác project `qlsv-trancong`. Các kết quả giai đoạn 1–4 bên dưới được giữ làm lịch sử, không tự động coi là kết quả của giai đoạn 5.
+
+## Kết quả kiểm tra giai đoạn 5
+
+**Đợt nghiệm thu tổng thể đã đạt 15/15 bước, exit code 0**, từ `08:00:25Z` đến `08:01:30Z` ngày 16/10/2026 (15:00–15:01 giờ Việt Nam). Sau đó chụp và mở xem đủ **15 ảnh**, chạy lại 7 nhóm hardening đạt lúc `08:04:43Z` để xác nhận trạng thái sau chụp. Các dữ liệu dưới đây lấy từ `verification-summary.json`, `capture-results.json`, transcript và JSON API mới trong `docs/evidence/phase5/`.
+
+| Nhóm | Bằng chứng/lệnh | Kết quả giai đoạn 5 |
+| --- | --- | --- |
+| Trạng thái trước sửa | Git status/branch/log/remote, Compose Ps | Đã kiểm tra; mốc giai đoạn 4 `7690551`, nhánh `master` |
+| Compose validate/build/up/ps | Các action `Validate`, `Up`, `Ps` của wrapper; Ps lại cuối đợt | Đạt; 12 service chạy thường trực và 2 init exit 0; giữ nguyên volume/cổng |
+| Hardening runtime | `npm run test:hardening`, inspect chọn trường, `/proc/1/status`, probe filesystem | Đạt 7 nhóm; 14 container đúng chính sách, app UID 1000, PID1 non-root, CapEff 0, NoNewPrivs 1, ghi rootfs trả EROFS, tmpfs ghi được |
+| MySQL least privilege | `SHOW GRANTS`, truy cập system table/tạo bảng tạm | Đạt; chỉ USAGE và bốn grant CRUD theo bảng, không GRANT OPTION; đọc `mysql.user` bị 1142 và DDL bảng tạm bị 1044 |
+| Syntax và unit | `npm run check`, `npm test` | Đạt 24 file JavaScript và 19/19 unit test |
+| CRUD bốn nhóm | `npm run test:integration`, so baseline SHA-256 | Đạt 9 nhóm; tạo/sửa/xóa dữ liệu tạm và dọn sạch; nội dung cả bốn bảng giữ nguyên hash |
+| Reverse proxy và security headers | `nginx -t`, `npm run test:proxy`, response headers | Đạt cấu hình và 6 kiểm tra; đủ nosniff, DENY, Referrer-Policy và Permissions-Policy |
+| Website/health/phpMyAdmin/Prometheus/Grafana | HTTP/health trực tiếp | Cả năm URL trả 200 sau redirect; `/health` xác nhận MySQL kết nối, Grafana database `ok` |
+| Prometheus/dashboard | `npm run test:monitoring` | Đạt 9 nhóm; 6/6 targets UP, `up=1`, 17 panel/21 truy vấn có dữ liệu thực, CPU/RAM đủ 12 service |
+| Loki/LogQL | `npm run test:logs` | Đạt 9 nhóm; Loki ready 200, datasource OK, 7 truy vấn trả log thật từ app/Nginx/MySQL/phpMyAdmin; health 200, probe 404 và count dương |
+| Cú pháp monitoring/logging | `promtool check config`, Loki verify-config, Promtail check-syntax | Tất cả đạt exit 0 |
+| HTTP 5xx ngoài dự kiến | LogQL qua Loki sau startup, có ingestion barrier, kiểm tra lại sau capture | Không có dòng Nginx 5xx trong `08:00:42.7451994Z`–`08:04:40.703Z`; không suy rộng ngoài cửa sổ này |
+| Minh chứng ảnh/API | `docs/evidence/phase5/`, `capture-results.json` | Đạt; 15 ảnh đã mở xem, website thật, 6 targets UP, dashboard có dữ liệu, Loki kết nối và Explore có log/health/404/count |
+| Git audit runtime | Tracked path, ignore, `git diff --check`, staged secret audit | Đạt; `.env` bị ignore, chỉ `.env.example` được theo dõi; 72 file staged không chứa mật khẩu runtime hoặc đường dẫn bị cấm |
+| Commit/push | Message giai đoạn 5; HEAD so với `origin/master` | Thực hiện sau khi đối chiếu ảnh và staged audit; hash cuối được báo lúc bàn giao |
+
+Baseline trước triển khai và kết quả sau kiểm thử đều có **3 lớp, 8 sinh viên, 4 môn học, 12 bản ghi điểm**; SHA-256 nội dung mỗi bảng khớp hoàn toàn. Không chỉ kiểm tra số dòng hoặc chạy lại seed. Bốn cổng chỉ bind loopback, năm named volume gốc giữ nguyên; không tác động project Docker khác.
+
+Lần kiểm tra đầu phát hiện healthcheck phpMyAdmin dùng PHP stream không hoạt động vì image tắt `allow_url_fopen`, dù HTTP thực tế vẫn 200. Đã sửa sang cURL HEAD nội bộ timeout 4 giây, yêu cầu status 200; giữ nguyên setting bảo mật bị tắt. Bằng chứng lần đầu giữ tại `checks/initial-verification-summary.json` và `checks/initial-hardening.txt`. Sau sửa, runner đã build/up và chạy lại toàn bộ 15 bước đạt. Monitoring lần cuối cần ba lượt chờ scrape hữu hạn do app vừa tạo lại, ban đầu p95 chưa có mẫu hữu hạn và metadata CPU cần warm-up; cuối cùng đủ 21 truy vấn đạt. Các lần chờ được giữ trong transcript, không dùng dữ liệu giả.
+
+### File thay đổi giai đoạn 5
+
+| File/nhóm | Nội dung |
+| --- | --- |
+| `docker-compose.yml` | User, filesystem/capability/no-new-privileges/tmpfs phù hợp, init quyền app, healthcheck phpMyAdmin/metadata; giữ cổng và volume |
+| `scripts/bootstrap-app-permissions.js` | Giới hạn user ứng dụng còn CRUD bốn bảng, dùng root Docker secret qua init non-root |
+| `scripts/hardening-test.js` | Kiểm tra chính sách runtime, cổng, app PID1, filesystem, DB grants/denial, baseline, URL/header, Loki không 5xx và Git paths |
+| `scripts/verify-final.ps1`, `package.json` | Runner 15 bước, transcript/summary; tùy chọn ba bước capture |
+| `scripts/capture-final-evidence.js` | Ảnh website CRUD, health và GitHub history nếu yêu cầu |
+| Các script monitoring/logging/capture hiện có | Hỗ trợ thư mục/nhãn evidence phase5, giữ lịch sử phase3/phase4 |
+| `README.md`, `PROGRESS.md`, `KIEM_TRA.md`, `BAO_CAO.md` | Vận hành, hardening, kết quả thực tế và báo cáo đầy đủ |
+| `docs/evidence/phase5/` | Baseline, transcript, JSON runtime/API, ảnh và hướng dẫn đối chiếu |
+
+### Minh chứng giai đoạn 5
+
+Danh mục 15 ảnh và các file đối chiếu nằm trong [docs/evidence/phase5/README.md](docs/evidence/phase5/README.md). `website/` có dashboard, bốn trang CRUD, health và lịch sử GitHub; `monitoring/` có Targets, container/web và database/Nginx; `logging/` có datasource Loki và bốn truy vấn Explore. `capture-results.json` lưu timestamp, kích thước, SHA-256 từng ảnh và kết quả xem trực tiếp. Ảnh chụp từ Chromium đang kết nối stack thật, không sửa ảnh hoặc thay dữ liệu giả.
+
+`website-health.json` và `security-headers.txt` giữ kết quả curl thật, không cookie. `git-history.txt` và ảnh GitHub là snapshot remote `master` **trước commit giai đoạn 5**, khi commit mới nhất là `7690551`; không dùng ảnh này để khẳng định đã có commit giai đoạn 5. Trạng thái cuối local/remote được kiểm chứng riêng sau push và báo lúc bàn giao. `checks/post-capture-hardening.txt` xác nhận 7 nhóm hardening vẫn đạt sau chụp, dữ liệu và health giữ nguyên.
+
+## Tài liệu và giới hạn giai đoạn 5
+
+README, tiến độ, nhật ký này, báo cáo mới và [docs/evidence/phase5/README.md](docs/evidence/phase5/README.md) được cập nhật theo kết quả thực tế. Không có `DEMO.md` hoặc `VERIFICATION.md` trong repository tại thời điểm rà soát; báo cáo và hướng dẫn demo hiện nằm trong README/BAO_CAO/KIEM_TRA.
+
+Giữ rõ các ngoại lệ Docker socket/cAdvisor; mount socket `:ro` không giới hạn API daemon. Loki filesystem một node không HA, named volume không thay thế backup; chưa có backup tự động hoặc diễn tập restore trong phạm vi hiện tại. Retention 7 ngày được cấu hình nhưng chưa quan sát hết 7 ngày. Promtail EOL ngày 02/03/2026; cần chuyển Alloy trước production. Website hiện chỉ dành localhost, chưa có đăng nhập/RBAC nghiệp vụ hoặc HTTPS.
+
+## Lịch sử triển khai và kiểm tra — Giai đoạn 4
 
 Ngày: 16/10/2026. Đề tài: **Hệ thống quản lý sinh viên** — Trần Đức Công, MSSV DTC245200418, lớp CNTT K23I. Giảng viên: Lê Khánh Dương, Đại học Công nghệ Thông tin và Truyền thông.
 

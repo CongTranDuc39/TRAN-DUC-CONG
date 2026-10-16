@@ -1,0 +1,14 @@
+
+> qlsv-trancong@1.0.0 test:logs
+> node scripts/logging-test.js
+
+OK Website, /health, all CRUD pages and phpMyAdmin return HTTP 200
+OK One safe GET request produces HTTP 404; no deliberate HTTP 5xx is generated
+OK Grafana health, provisioned Loki datasource and Loki /ready are healthy
+OK All seven saved LogQL queries return real results through the Grafana Loki datasource
+OK Log labels identify only student-management and the four configured Compose services
+OK Nginx 4xx/5xx filter finds the controlled HTTP 404; Express records a fresh successful /health JSON event
+OK Real MySQL and phpMyAdmin log streams are collected; count_over_time is positive and fresh
+OK All six Prometheus targets stay UP and up remains 1
+OK Website /health remains HTTP 200 after all logging checks
+PASS logging: 9 verification groups. Evidence: docs/evidence/phase5/logging/

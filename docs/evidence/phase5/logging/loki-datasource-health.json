@@ -1,0 +1,13 @@
+{
+  "datasource": {
+    "uid": "loki",
+    "name": "Loki",
+    "type": "loki",
+    "url": "http://loki:3100",
+    "readOnly": true
+  },
+  "health": {
+    "message": "Data source successfully connected.",
+    "status": "OK"
+  }
+}

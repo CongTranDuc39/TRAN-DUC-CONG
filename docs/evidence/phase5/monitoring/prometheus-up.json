@@ -1,0 +1,74 @@
+{
+  "status": "success",
+  "data": {
+    "resultType": "vector",
+    "result": [
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "prometheus:9090",
+          "job": "prometheus"
+        },
+        "value": [
+          1792137681.425,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "cadvisor:8080",
+          "job": "cadvisor"
+        },
+        "value": [
+          1792137681.425,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "nginx-exporter:9113",
+          "job": "nginx"
+        },
+        "value": [
+          1792137681.425,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "app:3000",
+          "job": "express"
+        },
+        "value": [
+          1792137681.425,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "mysql-exporter:9104",
+          "job": "mysql"
+        },
+        "value": [
+          1792137681.425,
+          "1"
+        ]
+      },
+      {
+        "metric": {
+          "__name__": "up",
+          "instance": "container-metadata:9256",
+          "job": "docker-metadata"
+        },
+        "value": [
+          1792137681.425,
+          "1"
+        ]
+      }
+    ]
+  }
+}

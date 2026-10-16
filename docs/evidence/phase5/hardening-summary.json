@@ -1,0 +1,28 @@
+{
+  "phase": 5,
+  "passed": true,
+  "startedAt": "2026-10-16T08:04:38.665Z",
+  "completedAt": "2026-10-16T08:04:43.021Z",
+  "acceptanceWindowStart": "2026-10-16T08:00:42.7451994Z",
+  "acceptanceWindowEnd": "2026-10-16T08:04:40.703Z",
+  "checks": [
+    "All 14 project containers match runtime hardening policy; 12 running and two initialization services exited 0",
+    "Only four loopback host ports are published; all five persistent data/positions volumes are preserved",
+    "Web PID1 is non-root with zero effective capabilities, NoNewPrivs=1, EROFS rootfs and writable temporary tmpfs",
+    "MySQL account has CRUD on four tables only; system-table reads and temporary DDL are denied; all data hashes match baseline",
+    "All five public URLs return HTTP 200; /health confirms MySQL and all four security headers remain present",
+    "No Nginx HTTP 5xx logs occurred during the post-startup acceptance-test window",
+    "Git ignores .env, tracks no forbidden runtime/secret paths and passes diff --check"
+  ],
+  "containerCount": 14,
+  "runningContainerCount": 12,
+  "initializationServiceCount": 2,
+  "exceptions": {
+    "cadvisor": "Privileged host observer required by Docker Desktop/containerd; internal only, rootfs/socket mounts read-only. Capabilities are not restricted by cap_drop under privileged mode.",
+    "db": "Root entrypoint prepares owned writable data/socket paths, then mysqld drops to mysql; CHOWN,DAC_OVERRIDE,SETUID,SETGID are retained.",
+    "nginx": "Root master binds port 80 and starts nginx workers; CHOWN,SETUID,SETGID,NET_BIND_SERVICE are retained; rootfs is read-only.",
+    "phpmyadmin": "Official root Apache entrypoint writes generated configuration under /etc/phpmyadmin; writable rootfs and CHOWN,DAC_OVERRIDE,SETUID,SETGID,NET_BIND_SERVICE retained.",
+    "promtail": "Root reads read-only Docker socket; the socket mount does not restrict Docker API methods.",
+    "container-metadata": "Supplementary group 0 permits read-only Docker socket access; the socket mount does not restrict Docker API methods."
+  }
+}

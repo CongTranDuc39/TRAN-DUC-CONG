@@ -7,7 +7,22 @@ Sinh viên Trần Đức Công — DTC245200418 — CNTT K23I. Giảng viên Lê
 | 1 | Express/EJS, MySQL/mysql2, CRUD, dữ liệu demo, Compose, phpMyAdmin | Hoàn thành; commit `0fff1ba` |
 | 2 | Nginx reverse proxy, security headers, log stdout/stderr, healthcheck | Hoàn thành; commit `78279da` |
 | 3 | Prometheus, Grafana, cAdvisor, MySQL/Nginx exporter, metrics Express, dashboard | Hoàn thành; commit `dedd6cb` |
-| 4 | Loki, Promtail, datasource Loki, LogQL và log HTTP an toàn | Hoàn thành triển khai và nghiệm thu; minh chứng lưu tại `docs/evidence/phase4/` |
+| 4 | Loki, Promtail, datasource Loki, LogQL và log HTTP an toàn | Hoàn thành; commit `7690551`, đã push `origin/master` |
+| 5 | Hardening, kiểm thử tổng thể, minh chứng và báo cáo | Đã nghiệm thu 15/15 bước, 15 ảnh và kiểm tra sau capture; commit/push thực hiện sau staged audit |
+
+## Giai đoạn 5
+
+- [x] Giữ nguyên commit giai đoạn 1–4, tên project Compose và named volume; đọc trạng thái Git/container trước khi sửa.
+- [x] User web/PID1 UID 1000, CapEff 0, NoNewPrivs 1; rootfs trả EROFS, tmpfs ghi được; 14 container đúng chính sách runtime.
+- [x] MySQL ứng dụng chỉ CRUD trên bốn bảng; đọc `mysql.user`/tạo bảng tạm bị từ chối; không GRANT OPTION.
+- [x] Compose validate/build/up/ps đạt; 24 file JavaScript, 19/19 unit test đạt; 12 service chạy và hai init exit 0.
+- [x] 9 nhóm CRUD, 6 kiểm tra proxy/headers đạt; website, health, phpMyAdmin HTTP 200; bốn bảng giữ nguyên hash và số dòng.
+- [x] 9 nhóm monitoring đạt, Prometheus 6/6 UP; 17 panel/21 truy vấn thật, CPU/RAM đủ 12 service.
+- [x] 9 nhóm log đạt; Loki ready 200, datasource OK, 7 truy vấn và log thật bốn service; 404 an toàn; không có 5xx trong cửa sổ sau startup đã ghi.
+- [x] Lưu minh chứng giai đoạn 5 riêng: 15 ảnh đã mở xem, transcript/API/baseline/headers/Git history; giữ nguyên phase3/phase4. Hardening sau capture vẫn đạt 7 nhóm.
+- [x] Hoàn thiện `BAO_CAO.md` đủ 14 mục, README, tiến độ và kết quả; ghi rõ ngoại lệ/hạn chế, backup/restore chỉ là chính sách đề xuất.
+
+Chi tiết nghiệm thu nằm ở đầu `KIEM_TRA.md` và `docs/evidence/phase5/README.md`. Git paths/ignore và `diff --check` đã đạt; staged secret audit là bước bảo vệ trước commit. Message bàn giao là `security: harden deployment and verify project requirements`; hash cuối, đối chiếu HEAD với `origin/master` và working tree được báo sau khi commit/push thực hiện. Ảnh GitHub trong evidence là snapshot trước commit giai đoạn 5; tài liệu này không dùng ảnh đó để khẳng định trạng thái push mới.
 
 ## Giai đoạn 4 đã triển khai
 

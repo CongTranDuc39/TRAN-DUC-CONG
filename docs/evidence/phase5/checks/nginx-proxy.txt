@@ -1,0 +1,11 @@
+
+> qlsv-trancong@1.0.0 test:proxy
+> node scripts/proxy-test.js
+
+OK GET /health: HTTP 200, 4 security headers và Server nginx
+OK GET /proxy-test-not-found: HTTP 404, 4 security headers và Server nginx
+OK POST /classes: HTTP 403, 4 security headers và Server nginx
+OK POST /classes: HTTP 413, 4 security headers và Server nginx
+OK GET /: HTTP 200, 4 security headers và Server nginx
+OK GET /css/style.css: HTTP 200, 4 security headers và Server nginx
+Kiểm tra Nginx: 6 yêu cầu đạt; không tạo hoặc sửa dữ liệu.

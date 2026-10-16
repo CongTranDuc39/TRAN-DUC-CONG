@@ -1,0 +1,34 @@
+{
+  "phase": 5,
+  "passed": true,
+  "startedAt": "2026-10-16T08:01:22.471Z",
+  "completedAt": "2026-10-16T08:01:25.245Z",
+  "checks": [
+    "Website, /health, all CRUD pages and phpMyAdmin return HTTP 200",
+    "One safe GET request produces HTTP 404; no deliberate HTTP 5xx is generated",
+    "Grafana health, provisioned Loki datasource and Loki /ready are healthy",
+    "All seven saved LogQL queries return real results through the Grafana Loki datasource",
+    "Log labels identify only student-management and the four configured Compose services",
+    "Nginx 4xx/5xx filter finds the controlled HTTP 404; Express records a fresh successful /health JSON event",
+    "Real MySQL and phpMyAdmin log streams are collected; count_over_time is positive and fresh",
+    "All six Prometheus targets stay UP and up remains 1",
+    "Website /health remains HTTP 200 after all logging checks"
+  ],
+  "collectedServices": [
+    "app",
+    "db",
+    "nginx",
+    "phpmyadmin"
+  ],
+  "projectLabel": "student-management",
+  "composeProject": "qlsv-trancong",
+  "controlledRequest": {
+    "method": "GET",
+    "path": "/__loki_probe_404",
+    "status": 404,
+    "intentional5xx": false
+  },
+  "queryCount": 7,
+  "targetCount": 6,
+  "evidenceNote": "Responses are collected through Grafana datasource proxy; credentials, cookies, headers and .env are excluded. Log lines are redacted defensively before writing."
+}

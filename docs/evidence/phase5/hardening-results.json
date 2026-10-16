@@ -1,0 +1,655 @@
+{
+  "phase": 5,
+  "passed": true,
+  "startedAt": "2026-10-16T08:04:38.665Z",
+  "completedAt": "2026-10-16T08:04:43.021Z",
+  "acceptanceWindowStart": "2026-10-16T08:00:42.7451994Z",
+  "acceptanceWindowEnd": "2026-10-16T08:04:40.703Z",
+  "checks": [
+    "All 14 project containers match runtime hardening policy; 12 running and two initialization services exited 0",
+    "Only four loopback host ports are published; all five persistent data/positions volumes are preserved",
+    "Web PID1 is non-root with zero effective capabilities, NoNewPrivs=1, EROFS rootfs and writable temporary tmpfs",
+    "MySQL account has CRUD on four tables only; system-table reads and temporary DDL are denied; all data hashes match baseline",
+    "All five public URLs return HTTP 200; /health confirms MySQL and all four security headers remain present",
+    "No Nginx HTTP 5xx logs occurred during the post-startup acceptance-test window",
+    "Git ignores .env, tracks no forbidden runtime/secret paths and passes diff --check"
+  ],
+  "containerCount": 14,
+  "runningContainerCount": 12,
+  "initializationServiceCount": 2,
+  "exceptions": {
+    "cadvisor": "Privileged host observer required by Docker Desktop/containerd; internal only, rootfs/socket mounts read-only. Capabilities are not restricted by cap_drop under privileged mode.",
+    "db": "Root entrypoint prepares owned writable data/socket paths, then mysqld drops to mysql; CHOWN,DAC_OVERRIDE,SETUID,SETGID are retained.",
+    "nginx": "Root master binds port 80 and starts nginx workers; CHOWN,SETUID,SETGID,NET_BIND_SERVICE are retained; rootfs is read-only.",
+    "phpmyadmin": "Official root Apache entrypoint writes generated configuration under /etc/phpmyadmin; writable rootfs and CHOWN,DAC_OVERRIDE,SETUID,SETGID,NET_BIND_SERVICE retained.",
+    "promtail": "Root reads read-only Docker socket; the socket mount does not restrict Docker API methods.",
+    "container-metadata": "Supplementary group 0 permits read-only Docker socket access; the socket mount does not restrict Docker API methods."
+  },
+  "containers": [
+    {
+      "name": "/qlsv-trancong-app-1",
+      "service": "app",
+      "project": "qlsv-trancong",
+      "user": "node:node",
+      "readOnly": true,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": null,
+      "securityOpt": [
+        "no-new-privileges:true"
+      ],
+      "privileged": false,
+      "ports": {},
+      "tmpfs": {
+        "/tmp": "rw,noexec,nosuid,nodev,size=16m,mode=1777"
+      },
+      "mounts": [],
+      "logDriver": "json-file",
+      "status": "running",
+      "exitCode": 0,
+      "health": "healthy"
+    },
+    {
+      "name": "/qlsv-trancong-app-permissions-init-1",
+      "service": "app-permissions-init",
+      "project": "qlsv-trancong",
+      "user": "node:node",
+      "readOnly": true,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": null,
+      "securityOpt": [
+        "no-new-privileges:true"
+      ],
+      "privileged": false,
+      "ports": {},
+      "tmpfs": null,
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "C:\\Users\\Windows\\OneDrive\\Desktop\\QLSV-trancong\\.local\\secrets\\mysql-root-password.txt",
+          "Destination": "/run/secrets/mysql_root_password",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "logDriver": "json-file",
+      "status": "exited",
+      "exitCode": 0,
+      "health": null
+    },
+    {
+      "name": "/qlsv-trancong-cadvisor-1",
+      "service": "cadvisor",
+      "project": "qlsv-trancong",
+      "user": "",
+      "readOnly": true,
+      "capDrop": null,
+      "capAdd": null,
+      "securityOpt": [
+        "no-new-privileges:true",
+        "label=disable"
+      ],
+      "privileged": true,
+      "ports": {},
+      "tmpfs": {
+        "/tmp": "rw,noexec,nosuid,nodev,size=16m,mode=1777"
+      },
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/",
+          "Destination": "/rootfs",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rslave"
+        },
+        {
+          "Type": "bind",
+          "Source": "/sys",
+          "Destination": "/sys",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/run/containerd/containerd.sock",
+          "Destination": "/run/containerd/containerd.sock",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/var/lib/docker",
+          "Destination": "/var/lib/docker",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rslave"
+        },
+        {
+          "Type": "bind",
+          "Source": "/var/run/docker.sock",
+          "Destination": "/var/run/docker.sock",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "logDriver": "json-file",
+      "status": "running",
+      "exitCode": 0,
+      "health": "healthy"
+    },
+    {
+      "name": "/qlsv-trancong-container-metadata-1",
+      "service": "container-metadata",
+      "project": "qlsv-trancong",
+      "user": "node",
+      "readOnly": true,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": null,
+      "securityOpt": [
+        "no-new-privileges:true"
+      ],
+      "privileged": false,
+      "ports": {},
+      "tmpfs": null,
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/var/run/docker.sock",
+          "Destination": "/var/run/docker.sock",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "logDriver": "json-file",
+      "status": "running",
+      "exitCode": 0,
+      "health": "healthy"
+    },
+    {
+      "name": "/qlsv-trancong-db-1",
+      "service": "db",
+      "project": "qlsv-trancong",
+      "user": "",
+      "readOnly": true,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": [
+        "CAP_CHOWN",
+        "CAP_DAC_OVERRIDE",
+        "CAP_SETGID",
+        "CAP_SETUID"
+      ],
+      "securityOpt": [
+        "no-new-privileges:true"
+      ],
+      "privileged": false,
+      "ports": {},
+      "tmpfs": {
+        "/tmp": "rw,noexec,nosuid,nodev,size=64m,mode=1777",
+        "/var/run/mysqld": "rw,noexec,nosuid,nodev,size=4m,uid=999,gid=999,mode=0775"
+      },
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/run/desktop/mnt/host/c/Users/Windows/OneDrive/Desktop/QLSV-trancong/database/init.sql",
+          "Destination": "/docker-entrypoint-initdb.d/01-init.sql",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "volume",
+          "Name": "qlsv-trancong_mysql_data",
+          "Source": "/var/lib/docker/volumes/qlsv-trancong_mysql_data/_data",
+          "Destination": "/var/lib/mysql",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        }
+      ],
+      "logDriver": "json-file",
+      "status": "running",
+      "exitCode": 0,
+      "health": "healthy"
+    },
+    {
+      "name": "/qlsv-trancong-grafana-1",
+      "service": "grafana",
+      "project": "qlsv-trancong",
+      "user": "472",
+      "readOnly": true,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": null,
+      "securityOpt": [
+        "no-new-privileges:true"
+      ],
+      "privileged": false,
+      "ports": {
+        "3000/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "3001"
+          }
+        ]
+      },
+      "tmpfs": {
+        "/tmp": "rw,nosuid,nodev,size=64m,mode=1777"
+      },
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "/run/desktop/mnt/host/c/Users/Windows/OneDrive/Desktop/QLSV-trancong/monitoring/grafana/provisioning",
+          "Destination": "/etc/grafana/provisioning",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "C:\\Users\\Windows\\OneDrive\\Desktop\\QLSV-trancong\\.local\\secrets\\grafana-admin-password.txt",
+          "Destination": "/run/secrets/grafana_admin_password",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "volume",
+          "Name": "qlsv-trancong_grafana_data",
+          "Source": "/var/lib/docker/volumes/qlsv-trancong_grafana_data/_data",
+          "Destination": "/var/lib/grafana",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "bind",
+          "Source": "/run/desktop/mnt/host/c/Users/Windows/OneDrive/Desktop/QLSV-trancong/monitoring/grafana/dashboards",
+          "Destination": "/var/lib/grafana/dashboards",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "logDriver": "json-file",
+      "status": "running",
+      "exitCode": 0,
+      "health": "healthy"
+    },
+    {
+      "name": "/qlsv-trancong-loki-1",
+      "service": "loki",
+      "project": "qlsv-trancong",
+      "user": "10001",
+      "readOnly": true,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": null,
+      "securityOpt": [
+        "no-new-privileges:true"
+      ],
+      "privileged": false,
+      "ports": {},
+      "tmpfs": null,
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "qlsv-trancong_loki_data",
+          "Source": "/var/lib/docker/volumes/qlsv-trancong_loki_data/_data",
+          "Destination": "/loki",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "bind",
+          "Source": "C:\\Users\\Windows\\OneDrive\\Desktop\\QLSV-trancong\\monitoring\\loki\\loki.yml",
+          "Destination": "/etc/loki/loki.yml",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "logDriver": "json-file",
+      "status": "running",
+      "exitCode": 0,
+      "health": null
+    },
+    {
+      "name": "/qlsv-trancong-mysql-exporter-1",
+      "service": "mysql-exporter",
+      "project": "qlsv-trancong",
+      "user": "nobody",
+      "readOnly": true,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": null,
+      "securityOpt": [
+        "no-new-privileges:true"
+      ],
+      "privileged": false,
+      "ports": {},
+      "tmpfs": null,
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "C:\\Users\\Windows\\OneDrive\\Desktop\\QLSV-trancong\\.local\\secrets\\mysql-exporter.cnf",
+          "Destination": "/run/secrets/mysql_exporter_client",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "logDriver": "json-file",
+      "status": "running",
+      "exitCode": 0,
+      "health": null
+    },
+    {
+      "name": "/qlsv-trancong-mysql-exporter-init-1",
+      "service": "mysql-exporter-init",
+      "project": "qlsv-trancong",
+      "user": "node:node",
+      "readOnly": true,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": null,
+      "securityOpt": [
+        "no-new-privileges:true"
+      ],
+      "privileged": false,
+      "ports": {},
+      "tmpfs": null,
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "C:\\Users\\Windows\\OneDrive\\Desktop\\QLSV-trancong\\.local\\secrets\\mysql-exporter-password.txt",
+          "Destination": "/run/secrets/mysql_exporter_password",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "C:\\Users\\Windows\\OneDrive\\Desktop\\QLSV-trancong\\.local\\secrets\\mysql-root-password.txt",
+          "Destination": "/run/secrets/mysql_root_password",
+          "Mode": "",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "logDriver": "json-file",
+      "status": "exited",
+      "exitCode": 0,
+      "health": null
+    },
+    {
+      "name": "/qlsv-trancong-nginx-1",
+      "service": "nginx",
+      "project": "qlsv-trancong",
+      "user": "",
+      "readOnly": true,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": [
+        "CAP_CHOWN",
+        "CAP_NET_BIND_SERVICE",
+        "CAP_SETGID",
+        "CAP_SETUID"
+      ],
+      "securityOpt": [
+        "no-new-privileges:true"
+      ],
+      "privileged": false,
+      "ports": {
+        "80/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "8082"
+          }
+        ]
+      },
+      "tmpfs": {
+        "/run": "rw,noexec,nosuid,nodev,size=4m,mode=0755",
+        "/tmp": "rw,noexec,nosuid,nodev,size=16m,mode=1777",
+        "/var/cache/nginx": "rw,noexec,nosuid,nodev,size=32m,mode=0755"
+      },
+      "mounts": [
+        {
+          "Type": "bind",
+          "Source": "C:\\Users\\Windows\\OneDrive\\Desktop\\QLSV-trancong\\nginx\\default.conf",
+          "Destination": "/etc/nginx/conf.d/default.conf",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "logDriver": "json-file",
+      "status": "running",
+      "exitCode": 0,
+      "health": "healthy"
+    },
+    {
+      "name": "/qlsv-trancong-nginx-exporter-1",
+      "service": "nginx-exporter",
+      "project": "qlsv-trancong",
+      "user": "1001:1001",
+      "readOnly": true,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": null,
+      "securityOpt": [
+        "no-new-privileges:true"
+      ],
+      "privileged": false,
+      "ports": {},
+      "tmpfs": null,
+      "mounts": [],
+      "logDriver": "json-file",
+      "status": "running",
+      "exitCode": 0,
+      "health": null
+    },
+    {
+      "name": "/qlsv-trancong-phpmyadmin-1",
+      "service": "phpmyadmin",
+      "project": "qlsv-trancong",
+      "user": "root",
+      "readOnly": false,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": [
+        "CAP_CHOWN",
+        "CAP_DAC_OVERRIDE",
+        "CAP_NET_BIND_SERVICE",
+        "CAP_SETGID",
+        "CAP_SETUID"
+      ],
+      "securityOpt": [
+        "no-new-privileges:true"
+      ],
+      "privileged": false,
+      "ports": {
+        "80/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "5056"
+          }
+        ]
+      },
+      "tmpfs": {
+        "/tmp": "rw,noexec,nosuid,nodev,size=32m,mode=1777",
+        "/var/lock/apache2": "rw,noexec,nosuid,nodev,size=4m,uid=33,gid=33,mode=0775",
+        "/var/run/apache2": "rw,noexec,nosuid,nodev,size=4m,uid=33,gid=33,mode=0775",
+        "/var/www/html/tmp": "rw,noexec,nosuid,nodev,size=32m,uid=33,gid=33,mode=0770"
+      },
+      "mounts": [],
+      "logDriver": "json-file",
+      "status": "running",
+      "exitCode": 0,
+      "health": "healthy"
+    },
+    {
+      "name": "/qlsv-trancong-prometheus-1",
+      "service": "prometheus",
+      "project": "qlsv-trancong",
+      "user": "nobody",
+      "readOnly": true,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": null,
+      "securityOpt": [
+        "no-new-privileges:true"
+      ],
+      "privileged": false,
+      "ports": {
+        "9090/tcp": [
+          {
+            "HostIp": "127.0.0.1",
+            "HostPort": "9091"
+          }
+        ]
+      },
+      "tmpfs": {
+        "/tmp": "rw,noexec,nosuid,nodev,size=16m,mode=1777"
+      },
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "qlsv-trancong_prometheus_data",
+          "Source": "/var/lib/docker/volumes/qlsv-trancong_prometheus_data/_data",
+          "Destination": "/prometheus",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "bind",
+          "Source": "/run/desktop/mnt/host/c/Users/Windows/OneDrive/Desktop/QLSV-trancong/monitoring/prometheus/prometheus.yml",
+          "Destination": "/etc/prometheus/prometheus.yml",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "logDriver": "json-file",
+      "status": "running",
+      "exitCode": 0,
+      "health": "healthy"
+    },
+    {
+      "name": "/qlsv-trancong-promtail-1",
+      "service": "promtail",
+      "project": "qlsv-trancong",
+      "user": "0:0",
+      "readOnly": true,
+      "capDrop": [
+        "ALL"
+      ],
+      "capAdd": null,
+      "securityOpt": [
+        "no-new-privileges:true"
+      ],
+      "privileged": false,
+      "ports": {},
+      "tmpfs": null,
+      "mounts": [
+        {
+          "Type": "volume",
+          "Name": "qlsv-trancong_promtail_positions",
+          "Source": "/var/lib/docker/volumes/qlsv-trancong_promtail_positions/_data",
+          "Destination": "/run/promtail",
+          "Driver": "local",
+          "Mode": "rw",
+          "RW": true,
+          "Propagation": ""
+        },
+        {
+          "Type": "bind",
+          "Source": "C:\\Users\\Windows\\OneDrive\\Desktop\\QLSV-trancong\\monitoring\\promtail\\promtail.yml",
+          "Destination": "/etc/promtail/promtail.yml",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        },
+        {
+          "Type": "bind",
+          "Source": "/var/run/docker.sock",
+          "Destination": "/var/run/docker.sock",
+          "Mode": "ro",
+          "RW": false,
+          "Propagation": "rprivate"
+        }
+      ],
+      "logDriver": "json-file",
+      "status": "running",
+      "exitCode": 0,
+      "health": null
+    }
+  ],
+  "appRuntime": {
+    "uid": 1000,
+    "pid1Uid": "1000",
+    "noNewPrivileges": "1",
+    "effectiveCapabilities": "0000000000000000",
+    "rootfsError": "EROFS",
+    "tmpfsWritable": true
+  },
+  "database": {
+    "identity": {
+      "account": "qlsv_app@%",
+      "db": "qlsv"
+    },
+    "grants": [
+      "GRANT USAGE ON *.* TO `qlsv_app`@`%`",
+      "GRANT SELECT, INSERT, UPDATE, DELETE ON `qlsv`.`classes` TO `qlsv_app`@`%`",
+      "GRANT SELECT, INSERT, UPDATE, DELETE ON `qlsv`.`scores` TO `qlsv_app`@`%`",
+      "GRANT SELECT, INSERT, UPDATE, DELETE ON `qlsv`.`students` TO `qlsv_app`@`%`",
+      "GRANT SELECT, INSERT, UPDATE, DELETE ON `qlsv`.`subjects` TO `qlsv_app`@`%`"
+    ],
+    "systemTableRead": "ER_TABLEACCESS_DENIED_ERROR",
+    "temporaryTableCreate": "ER_DBACCESS_DENIED_ERROR",
+    "tables": {
+      "classes": {
+        "rows": 3,
+        "sha256": "cb2acf0c6cc5aeb2cd5993eaf0a52e0631a17dcce0ca56f7f6c09c5c8ba3b6b4"
+      },
+      "students": {
+        "rows": 8,
+        "sha256": "4a0a24481070b33bb2cd4a25f83a5180b96c8e5dffd41c0ee94b09b6b796f3ac"
+      },
+      "subjects": {
+        "rows": 4,
+        "sha256": "5fead437d11f1c5a69fd9188c88f8c7738bfdfe92b981a80af47cc20c23e5790"
+      },
+      "scores": {
+        "rows": 12,
+        "sha256": "6cab335ac0ae715e943e1e3e8b6a59a47ca12f2a7cffac3436c396de0d111a4c"
+      }
+    }
+  }
+}

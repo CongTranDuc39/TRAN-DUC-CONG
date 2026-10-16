@@ -1,0 +1,149 @@
+{
+  "passed": true,
+  "completedAt": "2026-10-16T08:04:09.310Z",
+  "imageCount": 15,
+  "captures": [
+    {
+      "directory": "monitoring",
+      "script": "scripts/capture-monitoring-evidence.js",
+      "environment": {
+        "MONITORING_EVIDENCE_DIR": "docs/evidence/phase5/monitoring"
+      },
+      "exitCode": 0,
+      "images": [
+        {
+          "filename": "monitoring/container-web.png",
+          "bytes": 252807,
+          "sha256": "a2631121926a322596dc8ef64f2f6ba162145e03bcef899168f8b669a1022c09",
+          "capturedAt": "2026-10-16T08:02:14.772Z",
+          "visuallyReviewed": true
+        },
+        {
+          "filename": "monitoring/database-nginx.png",
+          "bytes": 244466,
+          "sha256": "6511ad26c17e1ec82f632f616b75af4c824be41a46ec8c67e4244fa6b003d12a",
+          "capturedAt": "2026-10-16T08:02:20.934Z",
+          "visuallyReviewed": true
+        },
+        {
+          "filename": "monitoring/prometheus-targets.png",
+          "bytes": 84891,
+          "sha256": "a66e2e97d5b355882a45a0266bd8d7575b5805407b444648bbd024dc32edd57b",
+          "capturedAt": "2026-10-16T08:02:04.110Z",
+          "visuallyReviewed": true
+        }
+      ]
+    },
+    {
+      "directory": "logging",
+      "script": "scripts/capture-logging-evidence.js",
+      "environment": {
+        "LOGGING_EVIDENCE_DIR": "docs/evidence/phase5/logging"
+      },
+      "exitCode": 0,
+      "images": [
+        {
+          "filename": "logging/explore-all.png",
+          "bytes": 200069,
+          "sha256": "33d4cfb43b398764e5e92d750783415ccc6ce831d1f1bae558535163fde2ae31",
+          "capturedAt": "2026-10-16T08:02:43.264Z",
+          "visuallyReviewed": true
+        },
+        {
+          "filename": "logging/explore-count.png",
+          "bytes": 103779,
+          "sha256": "5fd72bd99be58ddf2b3632ed46950c41156f4c078eb733e4b0b7864a0e1a94b5",
+          "capturedAt": "2026-10-16T08:02:52.513Z",
+          "visuallyReviewed": true
+        },
+        {
+          "filename": "logging/explore-errors.png",
+          "bytes": 248300,
+          "sha256": "50d2858559f02a531c50d298ef0e4d983e42ad21f27576404a70f2519498bbbd",
+          "capturedAt": "2026-10-16T08:02:49.339Z",
+          "visuallyReviewed": true
+        },
+        {
+          "filename": "logging/explore-health.png",
+          "bytes": 242127,
+          "sha256": "bdde433cf8c151408c82314a5fb8e7f28cff495663bac98ffb5147f694efaf83",
+          "capturedAt": "2026-10-16T08:02:46.355Z",
+          "visuallyReviewed": true
+        },
+        {
+          "filename": "logging/loki-datasource.png",
+          "bytes": 185779,
+          "sha256": "4ed595b515170777132e46a3d7928f61b593a0fe70e00582d7d0475aa6abf1ba",
+          "capturedAt": "2026-10-16T08:02:39.700Z",
+          "visuallyReviewed": true
+        }
+      ]
+    },
+    {
+      "directory": "website",
+      "script": "scripts/capture-final-evidence.js",
+      "environment": {
+        "FINAL_EVIDENCE_DIR": "docs/evidence/phase5/website",
+        "CAPTURE_GITHUB_HISTORY": "1"
+      },
+      "exitCode": 0,
+      "images": [
+        {
+          "filename": "website/github-commit-history.png",
+          "bytes": 72411,
+          "sha256": "d9e14e14c48c9cd2b7bbde60683c4a426e2d77e4493c02d831b255694c8c8f15",
+          "capturedAt": "2026-10-16T08:03:20.462Z",
+          "visuallyReviewed": true
+        },
+        {
+          "filename": "website/website-classes.png",
+          "bytes": 125499,
+          "sha256": "048658239c66ddfeb21a62ec1fc5489b4c6c05f441efe16db0eac4731fed8cb1",
+          "capturedAt": "2026-10-16T08:03:12.461Z",
+          "visuallyReviewed": true
+        },
+        {
+          "filename": "website/website-dashboard.png",
+          "bytes": 216391,
+          "sha256": "ef99ec73dcb6575a5a9eb703cf94a2c3142aeb688172a3f6c7f01af61ec64524",
+          "capturedAt": "2026-10-16T08:03:09.384Z",
+          "visuallyReviewed": true
+        },
+        {
+          "filename": "website/website-health.png",
+          "bytes": 10688,
+          "sha256": "3815734a395f5ae35aa467bb26819ca8d982bbc6220cc6a414ce8e2825e58989",
+          "capturedAt": "2026-10-16T08:03:16.607Z",
+          "visuallyReviewed": true
+        },
+        {
+          "filename": "website/website-scores.png",
+          "bytes": 237295,
+          "sha256": "7fb43e5b2cd652816f09fec8829ed613acfc0d436fce5d1321d074bd4f23f597",
+          "capturedAt": "2026-10-16T08:03:15.456Z",
+          "visuallyReviewed": true
+        },
+        {
+          "filename": "website/website-students.png",
+          "bytes": 184266,
+          "sha256": "bc2f8aa06bd586b47fa7f55b60344e6ddfada4a8ab8d55dae428dae8cad8e517",
+          "capturedAt": "2026-10-16T08:03:10.682Z",
+          "visuallyReviewed": true
+        },
+        {
+          "filename": "website/website-subjects.png",
+          "bytes": 127679,
+          "sha256": "22d08bae693656ffbe4b0f8972626b4f4b41ac4ffeb4fc1be9d232a503297dc9",
+          "capturedAt": "2026-10-16T08:03:14.187Z",
+          "visuallyReviewed": true
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "All three browser capture commands completed with exit code 0 after the final verification runner passed.",
+    "All 15 original PNG files were visually reviewed: live application data, six UP Prometheus targets, populated Grafana panels, successful Loki datasource, actual LogQL health/404/count results, and public GitHub history.",
+    "GitHub history screenshot shows remote master through commit 7690551 and was captured before the phase 5 commit; it does not claim to show that later commit.",
+    "Historical phase3/phase4 evidence was not overwritten. Images were captured directly from Chromium, without image editing or mock data."
+  ]
+}

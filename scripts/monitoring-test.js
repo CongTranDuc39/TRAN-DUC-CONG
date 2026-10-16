@@ -222,7 +222,7 @@ async function main() {
   }
 
   const summary = {
-    phase: 3,
+    phase: Number(process.env.MONITORING_EVIDENCE_PHASE || 3),
     passed: true,
     startedAt: startedAt.toISOString(),
     completedAt: new Date().toISOString(),

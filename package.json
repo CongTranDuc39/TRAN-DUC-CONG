@@ -16,7 +16,11 @@
     "test:proxy": "node scripts/proxy-test.js",
     "test:monitoring": "node scripts/monitoring-test.js",
     "test:logs": "node scripts/logging-test.js",
-    "capture:logs": "node scripts/capture-logging-evidence.js"
+    "test:hardening": "node scripts/hardening-test.js",
+    "test:final": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/verify-final.ps1",
+    "capture:logs": "node scripts/capture-logging-evidence.js",
+    "capture:monitoring": "node scripts/capture-monitoring-evidence.js",
+    "capture:final": "node scripts/capture-final-evidence.js"
   },
   "dependencies": {
     "cookie-parser": "^1.4.7",

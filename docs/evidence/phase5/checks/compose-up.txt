@@ -1,0 +1,153 @@
+ Image qlsv-trancong-app Building
+ Image qlsv-trancong-app Building
+ Image qlsv-trancong-app Building
+ Image qlsv-trancong-app Building
+#1 [internal] load local bake definitions
+#1 reading from stdin 2.11kB done
+#1 DONE 0.0s
+
+#2 [mysql-exporter-init internal] load build definition from Dockerfile
+#2 transferring dockerfile: 260B 0.0s done
+#2 DONE 0.0s
+
+#3 [auth] library/node:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#4 [mysql-exporter-init internal] load metadata for docker.io/library/node:24-alpine
+#4 DONE 1.9s
+
+#5 [app-permissions-init internal] load .dockerignore
+#5 transferring context: 187B done
+#5 DONE 0.0s
+
+#6 [mysql-exporter-init internal] load build context
+#6 transferring context: 97.97kB 0.0s done
+#6 DONE 0.1s
+
+#7 [container-metadata 1/5] FROM docker.io/library/node:24-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f
+#7 resolve docker.io/library/node:24-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f 0.1s done
+#7 DONE 0.1s
+
+#7 [mysql-exporter-init 1/5] FROM docker.io/library/node:24-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f
+#7 resolve docker.io/library/node:24-alpine@sha256:44fce696f38ba8c987c4db89954051000bbd05ffd8d8659ba15ed4a8602e937f 0.1s done
+#7 DONE 0.1s
+
+#8 [container-metadata 2/5] WORKDIR /app
+#8 CACHED
+
+#9 [container-metadata 3/5] COPY package.json package-lock.json ./
+#9 CACHED
+
+#10 [container-metadata 4/5] RUN npm ci --omit=dev && npm cache clean --force
+#10 CACHED
+
+#11 [mysql-exporter-init 5/5] COPY --chown=node:node . .
+#11 DONE 0.1s
+
+#12 [app] exporting to image
+#12 exporting layers 0.1s done
+#12 exporting manifest sha256:3301af4d2f017966520f1af11f22b64aafb208d90dd4796e44fbeb71cd4f6e92 0.0s done
+#12 exporting config sha256:cbaca55d1462653b3a8933352c5bedd5f33e36246381b3dddc68fd9386f96eb1
+#12 exporting config sha256:cbaca55d1462653b3a8933352c5bedd5f33e36246381b3dddc68fd9386f96eb1 0.1s done
+#12 exporting attestation manifest sha256:fea3967b8960218e59f6a28cb71fcc6697d0e3228b0cea3b29d29e5bf37162de
+#12 exporting attestation manifest sha256:fea3967b8960218e59f6a28cb71fcc6697d0e3228b0cea3b29d29e5bf37162de 0.1s done
+#12 exporting manifest list sha256:af6576a8271f62bf64361be9abdc3db323da6dd2f0831f889054129a701ed44f
+#12 exporting manifest list sha256:af6576a8271f62bf64361be9abdc3db323da6dd2f0831f889054129a701ed44f 0.0s done
+#12 naming to docker.io/library/qlsv-trancong-app:latest 0.0s done
+#12 unpacking to docker.io/library/qlsv-trancong-app:latest 0.1s done
+#12 DONE 0.6s
+
+#13 [mysql-exporter-init] exporting to image
+#13 exporting layers 0.2s done
+#13 exporting manifest sha256:442690ee2f12d9d2ebdd968e823869baa6ca7a3826c152bbe258aa22af1a02df 0.1s done
+#13 exporting config sha256:0034f43d497fcdf030dd4909528efdf435c235bb7e69232743a41cfcf5d11cfb 0.1s done
+#13 exporting attestation manifest sha256:e687858528372f3214c138e8e0701aada34bca223dd056cbc0e7965fc20d7f90 0.1s done
+#13 exporting manifest list sha256:4dff2bcc9b28b365658d28b656ec83076368c48288a2173fb37b0076ede70451 0.0s done
+#13 naming to docker.io/library/qlsv-trancong-app:latest 0.0s done
+#13 unpacking to docker.io/library/qlsv-trancong-app:latest 0.1s done
+#13 DONE 0.6s
+
+#14 [container-metadata] exporting to image
+#14 exporting layers 0.2s done
+#14 exporting manifest sha256:842d6d4af00e3ba06e5098695adadfbce0c354890c237901324022e7ac422e28 0.1s done
+#14 exporting config sha256:14d97dfae753183a24aa2c8ea8e2412f4d7855db5aaf74d4018a883cffaaa81d 0.1s done
+#14 exporting attestation manifest sha256:46ac4ab05e6539ed082694fd8bb416d34623c9a8e79a10caed99650dff940d51 0.1s done
+#14 exporting manifest list sha256:7c88ff55645ae9923fb6c98f4187084a63a04a461232452df7e57c89557acbd1 0.0s done
+#14 naming to docker.io/library/qlsv-trancong-app:latest 0.0s done
+#14 unpacking to docker.io/library/qlsv-trancong-app:latest 0.1s done
+#14 DONE 0.6s
+
+#15 [app-permissions-init] exporting to image
+#15 exporting layers 0.2s done
+#15 exporting manifest sha256:6a1f51d26e956165a56d19f86c5ef37fa0669fa024bb5076bc239c90088ddb24 0.1s done
+#15 exporting config sha256:818bfe6615694609b8e5a73e5dc7695b60526a0459511c4038cbb60c64341d9a 0.1s done
+#15 exporting attestation manifest sha256:eac4c3b24c35f98e32f850ac8a76e630ae4be5595ce83c315241218f083c2182 0.1s done
+#15 exporting manifest list sha256:7c2313ac9acb8faf196cacd153455672d9530a7aa5bec196107bb272fbf61fbb 0.0s done
+#15 naming to docker.io/library/qlsv-trancong-app:latest done
+#15 unpacking to docker.io/library/qlsv-trancong-app:latest 0.1s done
+#15 DONE 0.7s
+
+#16 [mysql-exporter-init] resolving provenance for metadata file
+#16 DONE 0.2s
+
+#17 [app] resolving provenance for metadata file
+#17 DONE 0.1s
+
+#18 [container-metadata] resolving provenance for metadata file
+#18 DONE 0.1s
+
+#19 [app-permissions-init] resolving provenance for metadata file
+#19 DONE 0.0s
+ Image qlsv-trancong-app Built
+ Image qlsv-trancong-app Built
+ Image qlsv-trancong-app Built
+ Image qlsv-trancong-app Built
+ Container qlsv-trancong-nginx-1 Running
+ Container qlsv-trancong-prometheus-1 Running
+ Container qlsv-trancong-mysql-exporter-1 Running
+ Container qlsv-trancong-promtail-1 Running
+ Container qlsv-trancong-cadvisor-1 Running
+ Container qlsv-trancong-db-1 Running
+ Container qlsv-trancong-grafana-1 Running
+ Container qlsv-trancong-nginx-exporter-1 Running
+ Container qlsv-trancong-loki-1 Running
+ Container qlsv-trancong-container-metadata-1 Recreate
+ Container qlsv-trancong-app-permissions-init-1 Recreate
+ Container qlsv-trancong-mysql-exporter-init-1 Recreate
+ Container qlsv-trancong-phpmyadmin-1 Recreate
+ Container qlsv-trancong-app-permissions-init-1 Recreated
+ Container qlsv-trancong-app-1 Recreate
+ Container qlsv-trancong-mysql-exporter-init-1 Recreated
+ Container qlsv-trancong-container-metadata-1 Recreated
+ Container qlsv-trancong-app-1 Recreated
+ Container qlsv-trancong-phpmyadmin-1 Recreated
+ Container qlsv-trancong-container-metadata-1 Starting
+ Container qlsv-trancong-db-1 Waiting
+ Container qlsv-trancong-db-1 Waiting
+ Container qlsv-trancong-db-1 Waiting
+ Container qlsv-trancong-container-metadata-1 Started
+ Container qlsv-trancong-db-1 Healthy
+ Container qlsv-trancong-mysql-exporter-init-1 Starting
+ Container qlsv-trancong-db-1 Healthy
+ Container qlsv-trancong-app-permissions-init-1 Starting
+ Container qlsv-trancong-db-1 Healthy
+ Container qlsv-trancong-phpmyadmin-1 Starting
+ Container qlsv-trancong-mysql-exporter-init-1 Started
+ Container qlsv-trancong-mysql-exporter-init-1 Waiting
+ Container qlsv-trancong-app-permissions-init-1 Started
+ Container qlsv-trancong-db-1 Waiting
+ Container qlsv-trancong-app-permissions-init-1 Waiting
+ Container qlsv-trancong-mysql-exporter-init-1 Exited
+ Container qlsv-trancong-phpmyadmin-1 Started
+ Container qlsv-trancong-app-permissions-init-1 Exited
+ Container qlsv-trancong-db-1 Healthy
+ Container qlsv-trancong-app-1 Starting
+ Container qlsv-trancong-app-1 Started
+ Container qlsv-trancong-app-1 Waiting
+ Container qlsv-trancong-app-1 Healthy
+ Container qlsv-trancong-nginx-1 Waiting
+ Container qlsv-trancong-nginx-1 Healthy
+ Container qlsv-trancong-app-1 Waiting
+ Container qlsv-trancong-app-1 Healthy
+ Container qlsv-trancong-prometheus-1 Waiting
+ Container qlsv-trancong-prometheus-1 Healthy

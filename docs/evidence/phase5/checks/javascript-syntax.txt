@@ -1,0 +1,5 @@
+
+> qlsv-trancong@1.0.0 check
+> node scripts/check-syntax.js
+
+Cú pháp hợp lệ: 24 tệp JavaScript.

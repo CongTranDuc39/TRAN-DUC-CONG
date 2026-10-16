@@ -1,0 +1,5 @@
+
+> qlsv-trancong@1.0.0 test:hardening
+> node scripts/hardening-test.js
+
+FAIL hardening: ERR_ASSERTION

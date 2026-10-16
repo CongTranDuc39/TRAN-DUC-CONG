@@ -8,7 +8,7 @@ const { once } = require('node:events');
 const { setTimeout: delay } = require('node:timers/promises');
 
 const root = path.resolve(__dirname, '..');
-const evidence = path.join(root, 'docs', 'evidence', 'phase4');
+const evidence = path.resolve(root, process.env.LOGGING_EVIDENCE_DIR || 'docs/evidence/phase4');
 const grafana = 'http://localhost:3001';
 const browserPaths = [process.env.CHROME_PATH,
   'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -81,7 +81,7 @@ async function main() {
       }
       const result = await send('Page.captureScreenshot', options, sessionId);
       fs.writeFileSync(path.join(evidence, filename), Buffer.from(result.data, 'base64'));
-      console.log(`Saved docs/evidence/phase4/${filename}`);
+      console.log(`Saved ${path.relative(root, path.join(evidence, filename)).split(path.sep).join('/')}`);
     };
     await send('Emulation.setDeviceMetricsOverride', { width: 1680, height: 1180, deviceScaleFactor: 1, mobile: false }, sessionId);
     await send('Page.navigate', { url: `${grafana}/login` }, sessionId);

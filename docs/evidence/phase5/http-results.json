@@ -1,0 +1,39 @@
+{
+  "endpoints": [
+    {
+      "url": "http://localhost:8082/",
+      "status": 200,
+      "finalUrl": "http://localhost:8082/"
+    },
+    {
+      "url": "http://localhost:8082/health",
+      "status": 200,
+      "finalUrl": "http://localhost:8082/health"
+    },
+    {
+      "url": "http://localhost:5056/",
+      "status": 200,
+      "finalUrl": "http://localhost:5056/"
+    },
+    {
+      "url": "http://localhost:9091/",
+      "status": 200,
+      "finalUrl": "http://localhost:9091/query"
+    },
+    {
+      "url": "http://localhost:3001/",
+      "status": 200,
+      "finalUrl": "http://localhost:3001/login"
+    }
+  ],
+  "health": {
+    "status": "ok",
+    "database": "connected"
+  },
+  "headers": {
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "DENY",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "permissions-policy": "camera=(), microphone=(), geolocation=()"
+  }
+}

@@ -1,0 +1,14 @@
+
+> qlsv-trancong@1.0.0 test:integration
+> node scripts/integration-test.js
+
+OK Healthcheck xác nhận kết nối MySQL
+OK Dashboard, 4 danh sách và tài nguyên giao diện hoạt động
+OK Từ chối POST thiếu CSRF, token sai và token Unicode không hợp lệ
+OK Thêm, sửa, tìm lớp và chặn mã lớp trùng
+OK Escape HTML, tìm kiếm ký tự đặc biệt và xử lý trang 404
+OK CRUD sinh viên, email tùy chọn, gán/bỏ gán lớp và bảo vệ khóa ngoại
+OK Thêm, sửa và tìm kiếm môn học
+OK CRUD điểm, lọc dữ liệu, tỷ trọng 10/30/60, trung bình tín chỉ và ràng buộc dữ liệu
+OK Xóa toàn bộ dữ liệu kiểm thử, giữ nguyên dữ liệu có sẵn
+Kiểm tra tích hợp: 9 nhóm đạt, hoàn tất.

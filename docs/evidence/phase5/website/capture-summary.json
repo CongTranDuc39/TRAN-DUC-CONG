@@ -1,0 +1,42 @@
+{
+  "passed": true,
+  "completedAt": "2026-10-16T08:03:20.462Z",
+  "note": "Screenshots were captured from running pages after HTTP and content checks. No image editing or mock data was used.",
+  "captures": [
+    {
+      "filename": "website-dashboard.png",
+      "url": "http://localhost:8082/",
+      "capturedAt": "2026-10-16T08:03:09.381Z"
+    },
+    {
+      "filename": "website-students.png",
+      "url": "http://localhost:8082/students",
+      "capturedAt": "2026-10-16T08:03:10.681Z"
+    },
+    {
+      "filename": "website-classes.png",
+      "url": "http://localhost:8082/classes",
+      "capturedAt": "2026-10-16T08:03:12.459Z"
+    },
+    {
+      "filename": "website-subjects.png",
+      "url": "http://localhost:8082/subjects",
+      "capturedAt": "2026-10-16T08:03:14.185Z"
+    },
+    {
+      "filename": "website-scores.png",
+      "url": "http://localhost:8082/scores",
+      "capturedAt": "2026-10-16T08:03:15.454Z"
+    },
+    {
+      "filename": "website-health.png",
+      "url": "http://localhost:8082/health",
+      "capturedAt": "2026-10-16T08:03:16.606Z"
+    },
+    {
+      "filename": "github-commit-history.png",
+      "url": "https://github.com/CongTranDuc39/TRAN-DUC-CONG/commits/master/",
+      "capturedAt": "2026-10-16T08:03:20.462Z"
+    }
+  ]
+}

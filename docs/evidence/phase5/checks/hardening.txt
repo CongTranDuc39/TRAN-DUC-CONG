@@ -1,0 +1,12 @@
+
+> qlsv-trancong@1.0.0 test:hardening
+> node scripts/hardening-test.js
+
+OK All 14 project containers match runtime hardening policy; 12 running and two initialization services exited 0
+OK Only four loopback host ports are published; all five persistent data/positions volumes are preserved
+OK Web PID1 is non-root with zero effective capabilities, NoNewPrivs=1, EROFS rootfs and writable temporary tmpfs
+OK MySQL account has CRUD on four tables only; system-table reads and temporary DDL are denied; all data hashes match baseline
+OK All five public URLs return HTTP 200; /health confirms MySQL and all four security headers remain present
+OK No Nginx HTTP 5xx logs occurred during the post-startup acceptance-test window
+OK Git ignores .env, tracks no forbidden runtime/secret paths and passes diff --check
+PASS hardening: 7 verification groups. Evidence: docs/evidence/phase5/

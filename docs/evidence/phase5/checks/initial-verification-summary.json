@@ -1,0 +1,108 @@
+{
+    "phase":  5,
+    "passed":  false,
+    "startedAt":  "2026-10-16T07:53:48.9576941Z",
+    "completedAt":  "2026-10-16T07:55:13.6975910Z",
+    "skippedBuild":  false,
+    "capturesRequested":  false,
+    "steps":  [
+                  {
+                      "name":  "compose-config",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-stack.ps1 -Action Validate",
+                      "startedAt":  "2026-10-16T07:53:48.9949714Z",
+                      "completedAt":  "2026-10-16T07:53:49.6232742Z",
+                      "exitCode":  0
+                  },
+                  {
+                      "name":  "compose-up",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-stack.ps1 -Action Up",
+                      "startedAt":  "2026-10-16T07:53:49.6403913Z",
+                      "completedAt":  "2026-10-16T07:54:33.8236252Z",
+                      "exitCode":  0
+                  },
+                  {
+                      "name":  "compose-ps",
+                      "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/local-stack.ps1 -Action Ps",
+                      "startedAt":  "2026-10-16T07:54:33.8255375Z",
+                      "completedAt":  "2026-10-16T07:54:34.5322997Z",
+                      "exitCode":  0
+                  },
+                  {
+                      "name":  "javascript-syntax",
+                      "command":  "npm.cmd run check",
+                      "startedAt":  "2026-10-16T07:54:34.5442182Z",
+                      "completedAt":  "2026-10-16T07:54:37.2686871Z",
+                      "exitCode":  0
+                  },
+                  {
+                      "name":  "unit-tests",
+                      "command":  "npm.cmd test",
+                      "startedAt":  "2026-10-16T07:54:37.2720298Z",
+                      "completedAt":  "2026-10-16T07:54:38.9129142Z",
+                      "exitCode":  0
+                  },
+                  {
+                      "name":  "nginx-config",
+                      "command":  "docker exec qlsv-trancong-nginx-1 nginx -t",
+                      "startedAt":  "2026-10-16T07:54:38.9139334Z",
+                      "completedAt":  "2026-10-16T07:54:39.0884089Z",
+                      "exitCode":  0
+                  },
+                  {
+                      "name":  "prometheus-config",
+                      "command":  "docker exec qlsv-trancong-prometheus-1 promtool check config /etc/prometheus/prometheus.yml",
+                      "startedAt":  "2026-10-16T07:54:39.0976665Z",
+                      "completedAt":  "2026-10-16T07:54:39.9881899Z",
+                      "exitCode":  0
+                  },
+                  {
+                      "name":  "loki-config",
+                      "command":  "docker exec qlsv-trancong-loki-1 /usr/bin/loki -config.file=/etc/loki/loki.yml -verify-config=true",
+                      "startedAt":  "2026-10-16T07:54:39.9882557Z",
+                      "completedAt":  "2026-10-16T07:54:40.3230898Z",
+                      "exitCode":  0
+                  },
+                  {
+                      "name":  "promtail-config",
+                      "command":  "docker exec qlsv-trancong-promtail-1 /usr/bin/promtail -config.file=/etc/promtail/promtail.yml -check-syntax",
+                      "startedAt":  "2026-10-16T07:54:40.3243290Z",
+                      "completedAt":  "2026-10-16T07:54:40.5477936Z",
+                      "exitCode":  0
+                  },
+                  {
+                      "name":  "crud-integration",
+                      "command":  "npm.cmd run test:integration",
+                      "startedAt":  "2026-10-16T07:54:40.5494464Z",
+                      "completedAt":  "2026-10-16T07:54:42.9436741Z",
+                      "exitCode":  0
+                  },
+                  {
+                      "name":  "nginx-proxy",
+                      "command":  "npm.cmd run test:proxy",
+                      "startedAt":  "2026-10-16T07:54:42.9446852Z",
+                      "completedAt":  "2026-10-16T07:54:43.7249901Z",
+                      "exitCode":  0
+                  },
+                  {
+                      "name":  "monitoring",
+                      "command":  "npm.cmd run test:monitoring",
+                      "startedAt":  "2026-10-16T07:54:43.7262551Z",
+                      "completedAt":  "2026-10-16T07:55:00.1003662Z",
+                      "exitCode":  0
+                  },
+                  {
+                      "name":  "logging",
+                      "command":  "npm.cmd run test:logs",
+                      "startedAt":  "2026-10-16T07:55:00.1090457Z",
+                      "completedAt":  "2026-10-16T07:55:11.5236355Z",
+                      "exitCode":  0
+                  },
+                  {
+                      "name":  "hardening",
+                      "command":  "npm.cmd run test:hardening",
+                      "startedAt":  "2026-10-16T07:55:11.5269421Z",
+                      "completedAt":  "2026-10-16T07:55:13.6759881Z",
+                      "exitCode":  1
+                  }
+              ]
+}
